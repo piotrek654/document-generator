@@ -25,7 +25,7 @@ Ułatwić tworzenie **zbioru dokumentów** na podstawie jednego zestawu danych. 
 | F11 | Listy wyboru (select) z zamkniętą listą wartości, np. `jednostka`: miesięcznie / dziennie / godzinowo. |
 | F12 | Kwota wyświetlana w formacie `1 234,50` (spacja tysięcy, przecinek dziesiętny). |
 | F13 | Szablony **`.xlsx`** (Excel) obok `.docx`: wszystkie pliki `.docx` i `.xlsx` z `data/` trafiają do wspólnego PDF-a (kolejność wg nazw plików); z `.xlsx` wszystkie arkusze. Formuł raczej nie będzie, więc wartości (także kwota) wstawiane są jako sformatowany tekst, tak jak w `.docx`. Do ustalenia na pliku testowym: obszar wydruku, przekreślenie w komórkach. |
-| F14 | Ciągła **numeracja stron** w scalonym pliku PDF (np. stopka „Strona X z Y” lub „X / Y” nanoszona na złączony dokument). |
+| F14 | **Numeracja stron** per pojedynczy dokument (np. stopka „Strona X z Y” dla każdego wygenerowanego dokumentu z osobna, liczona od 1 do N w ramach danego szablonu, a nie jedna ciągła dla całego scalonego pliku). |
 
 ### 2.2 Niefunkcjonalne
 
@@ -95,7 +95,6 @@ Kryterium wyboru: czy osoba edytująca ma nowszego Worda i czy coś wymusza form
 6. Czy LibreOffice może być instalowany osobno, czy ma być dołączony do instalatora (wersja portable na Windows)?
 7. Czy potrzebne jest scalenie PDF-ów w jeden plik?
 8. Czy są wymagania co do przechowywania danych osobowych (szyfrowanie, automatyczne usuwanie)?
-9. Czy scalony PDF powinien mieć jednolitą, ciągłą numerację stron całego pakietu dokumentów (np. dodawaną w stopce przez PDFBox)?
 
 ## 5. Znane ryzyka
 
@@ -146,4 +145,3 @@ Sprawdzone: paczka Linux (PDF + okno) oraz exe w Wine 11.17 (start na wbudowanym
 6. Walidator szablonów: placeholdery spoza `fields.yaml`, niedomknięte bloki, niedozwolone czcionki; próbny PDF.
 7. Blok `skresl` przez kilka akapitów (jeśli szablony tego wymagają).
 8. Pakowanie jpackage na Windows i Linux, sprawdzenie LibreOffice na Windows.
-9. Ciągła numeracja stron w scalonym dokumencie PDF (np. nanoszona na etapie łączenia w PDFBox).
