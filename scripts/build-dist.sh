@@ -39,6 +39,48 @@ copy_app_files() {  # $1 = target app directory
     find "$PROJECT_DIR/data" -maxdepth 1 -name '*.docx' ! -name '.~lock*' -exec cp {} "$1/data/" \;
 }
 
+pack_windows_zip() {  # $1 = source_dir, $2 = output_zip, $3 = base_dir_name
+    if command -v python3 >/dev/null 2>&1; then
+        python3 - "$1" "$2" "$3" <<'EOF'
+import sys, os, zipfile, time
+
+source_dir, output_zip, base_dir = sys.argv[1], sys.argv[2], sys.argv[3]
+with zipfile.ZipFile(output_zip, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
+    root_zinfo = zipfile.ZipInfo(base_dir + '/', (2026, 1, 1, 0, 0, 0))
+    root_zinfo.create_system = 0  # MS-DOS / Windows FAT
+    root_zinfo.external_attr = 0x10  # FILE_ATTRIBUTE_DIRECTORY
+    zf.writestr(root_zinfo, '')
+
+    for root, dirs, files in os.walk(source_dir):
+        rel_dir = os.path.relpath(root, source_dir)
+        if rel_dir == '.':
+            prefix = base_dir
+        else:
+            prefix = base_dir + '/' + rel_dir.replace('\\', '/')
+
+        for d in sorted(dirs):
+            dir_path = prefix + '/' + d + '/'
+            zinfo = zipfile.ZipInfo(dir_path, (2026, 1, 1, 0, 0, 0))
+            zinfo.create_system = 0
+            zinfo.external_attr = 0x10
+            zf.writestr(zinfo, '')
+
+        for f in sorted(files):
+            file_full = os.path.join(root, f)
+            file_path = prefix + '/' + f
+            mtime = time.localtime(os.path.getmtime(file_full))
+            dt = (mtime.tm_year, mtime.tm_mon, mtime.tm_mday, mtime.tm_hour, mtime.tm_min, mtime.tm_sec)
+            zinfo = zipfile.ZipInfo(file_path, dt[:6])
+            zinfo.create_system = 0
+            zinfo.external_attr = 0x20  # FILE_ATTRIBUTE_ARCHIVE
+            with open(file_full, 'rb') as src:
+                zf.writestr(zinfo, src.read(), compress_type=zipfile.ZIP_DEFLATED)
+EOF
+    else
+        (cd "$(dirname "$1")" && zip -qr -X "$2" "$3")
+    fi
+}
+
 cd "$PROJECT_DIR"
 mvn -q clean package
 rm -rf "$DIST_DIR"
@@ -46,10 +88,12 @@ rm -rf "$DIST_DIR"
 windows="$DIST_DIR/windows/document-generator"
 mkdir -p "$windows"
 cp target/document-generator.exe "$windows/"
+cp target/document-generator.jar "$windows/"
+cp scripts/uruchom.bat "$windows/"
 copy_app_files "$windows"
 unpack_jre "$(download_jre windows zip)" "$windows"
 chmod -R a+rX,u+w,go-w "$windows"
-(cd "$DIST_DIR/windows" && zip -qr -X "$DIST_DIR/document-generator-windows.zip" document-generator)
+pack_windows_zip "$windows" "$DIST_DIR/document-generator-windows.zip" document-generator
 
 linux="$DIST_DIR/linux/document-generator"
 mkdir -p "$linux"

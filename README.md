@@ -86,17 +86,19 @@ Uruchom skrypt budujący z katalogu głównego projektu:
 ```text
 document-generator/
 ├── document-generator.exe       # Główny plik uruchamiający aplikację
-├── jre/                # Wbudowane środowisko Java 25 (x64)
+├── document-generator.jar       # Plik JAR aplikacji
+├── uruchom.bat                  # Skrypt uruchamiający (alternatywa dla .exe)
+├── jre/                         # Wbudowane środowisko Java 25 (x64)
 ├── config/
-│   └── fields.yaml     # Konfiguracja pól formularza
+│   └── fields.yaml              # Konfiguracja pól formularza
 └── data/
-    └── *.docx          # Szablony dokumentów Word
+    └── *.docx                   # Szablony dokumentów
 ```
 
 ### Wymagania i uruchomienie na komputerze z Windows:
 1. Zainstalowany program **LibreOffice** (dostępny bezpłatnie na [libreoffice.org](https://www.libreoffice.org/)).
 2. Wypakowanie archiwum `document-generator-windows.zip`.
-3. Uruchomienie aplikacji poprzez dwuklik na plik `document-generator.exe`.
+3. Uruchomienie aplikacji poprzez dwuklik na plik `document-generator.exe` (lub `uruchom.bat`).
 4. Wygenerowane dokumenty zapisywane są w katalogu `output/dokumenty.pdf`.
 
 ---
