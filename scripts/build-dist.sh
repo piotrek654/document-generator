@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Builds ready-to-copy packages with a bundled Java runtime (Temurin JRE):
-#   target/dist/formularz-windows.zip  -> formularz.exe, jre/, config/, data/
-#   target/dist/formularz-linux.zip    -> formularz.jar, uruchom.sh, jre/, config/, data/
+#   target/dist/document-generator-windows.zip  -> document-generator.exe, jre/, config/, data/
+#   target/dist/document-generator-linux.zip    -> document-generator.jar, uruchom.sh, jre/, config/, data/
 # The only thing the user still has to install is LibreOffice.
 set -euo pipefail
 
 JAVA_FEATURE=25
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/formularz-jre"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/document-generator-jre"
 DIST_DIR="$PROJECT_DIR/target/dist"
 
 download_jre() {  # $1 = os (windows|linux), $2 = archive extension
@@ -43,20 +43,20 @@ cd "$PROJECT_DIR"
 mvn -q clean package
 rm -rf "$DIST_DIR"
 
-windows="$DIST_DIR/windows/formularz"
+windows="$DIST_DIR/windows/document-generator"
 mkdir -p "$windows"
-cp target/formularz.exe "$windows/"
+cp target/document-generator.exe "$windows/"
 copy_app_files "$windows"
 unpack_jre "$(download_jre windows zip)" "$windows"
-(cd "$DIST_DIR/windows" && zip -qr "$DIST_DIR/formularz-windows.zip" formularz)
+(cd "$DIST_DIR/windows" && zip -qr "$DIST_DIR/document-generator-windows.zip" document-generator)
 
-linux="$DIST_DIR/linux/formularz"
+linux="$DIST_DIR/linux/document-generator"
 mkdir -p "$linux"
-cp target/formularz.jar "$linux/"
+cp target/document-generator.jar "$linux/"
 cp scripts/uruchom.sh "$linux/"
 chmod +x "$linux/uruchom.sh"
 copy_app_files "$linux"
 unpack_jre "$(download_jre linux tar.gz)" "$linux"
-(cd "$DIST_DIR/linux" && zip -qr "$DIST_DIR/formularz-linux.zip" formularz)
+(cd "$DIST_DIR/linux" && zip -qr "$DIST_DIR/document-generator-linux.zip" document-generator)
 
 ls -lh "$DIST_DIR"/*.zip

@@ -89,7 +89,7 @@ public class DocumentGenerator {
 
     private static Path createTempDirectory() {
         try {
-            return Files.createTempDirectory("formularz-");
+            return Files.createTempDirectory("document-generator-");
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot create a temp directory", e);
         }

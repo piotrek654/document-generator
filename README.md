@@ -1,4 +1,4 @@
-# Formularz — Generator dokumentów PDF
+# Document Generator — Generator dokumentów PDF
 
 Aplikacja desktopowa w języku Java służąca do automatycznego generowania i scalania dokumentów PDF z wielu szablonów `.docx` (Word) na podstawie danych wprowadzonych w formularzu (interfejs graficzny JavaFX) lub przekazanych z wiersza poleceń (CLI).
 
@@ -13,7 +13,7 @@ Aplikacja desktopowa w języku Java służąca do automatycznego generowania i s
 - **Narzędzia powłoki Bash** (do skryptu dystrybucyjnego): `bash`, `curl`, `zip`, `unzip`, `tar` oraz dostęp do Internetu (do pobrania JRE)
 
 ### Środowisko uruchomieniowe użytkownika końcowego
-- **Paczka ze skryptu dystrybucyjnego (`target/dist/formularz-windows.zip`)**:
+- **Paczka ze skryptu dystrybucyjnego (`target/dist/document-generator-windows.zip`)**:
   - Nie wymaga instalacji Javy (pacza zawiera wbudowane środowisko Temurin JRE 25).
   - Wymaga zainstalowanego programu **LibreOffice** (w standardowej ścieżce, np. `C:\Program Files\LibreOffice`).
 
@@ -38,8 +38,8 @@ mvn verify
 mvn package
 ```
 W katalogu `target/` powstaną:
-- `target/formularz.jar` – tzw. *fat JAR* (zawiera wszystkie zależności, w tym natywne biblioteki JavaFX dla Windows i Linux).
-- `target/formularz.exe` – plik wykonywalny Windows utworzony przez plugin `launch4j-maven-plugin` (opakowujący JAR i odwołujący się do lokalnego katalogu `jre/`).
+- `target/document-generator.jar` – tzw. *fat JAR* (zawiera wszystkie zależności, w tym natywne biblioteki JavaFX dla Windows i Linux).
+- `target/document-generator.exe` – plik wykonywalny Windows utworzony przez plugin `launch4j-maven-plugin` (opakowujący JAR i odwołujący się do lokalnego katalogu `jre/`).
 
 ### Uruchamianie w trybie deweloperskim
 
@@ -62,7 +62,7 @@ Projekt zawiera zautomatyzowany skrypt tworzący gotowe paczki zip zawierające 
 ### Wymagania do stworzenia paczki:
 - Środowisko uniksowe / powłoka Bash (Linux, macOS, WSL lub Git Bash na Windows).
 - Zainstalowane narzędzia: `mvn`, `curl`, `zip`, `unzip`, `tar`.
-- Połączenie internetowe (skrypt automatycznie pobiera oficjalne archiwum Eclipse Temurin JRE 25 z API Adoptium i zapisuje je w pamięci podręcznej `~/.cache/formularz-jre`).
+- Połączenie internetowe (skrypt automatycznie pobiera oficjalne archiwum Eclipse Temurin JRE 25 z API Adoptium i zapisuje je w pamięci podręcznej `~/.cache/document-generator-jre`).
 
 ### Jak stworzyć paczkę:
 Uruchom skrypt budujący z katalogu głównego projektu:
@@ -71,21 +71,21 @@ Uruchom skrypt budujący z katalogu głównego projektu:
 ```
 
 ### Co robi skrypt:
-1. Kompiluje projekt i tworzy `target/formularz.jar` oraz `target/formularz.exe` (`mvn -q clean package`).
+1. Kompiluje projekt i tworzy `target/document-generator.jar` oraz `target/document-generator.exe` (`mvn -q clean package`).
 2. Pobiera (jeśli nie ma w cache) i wypakowuje 64-bitowy **Temurin JRE 25 dla Windows** do podkatalogu `jre/`.
 3. Kopiuje pliki konfiguracyjne (`config/`) oraz szablony (`data/`).
 4. Pakuje całość do archiwum ZIP:
-   - `target/dist/formularz-windows.zip`
-   *(skrypt równolegle generuje również wersję dla Linuksa: `target/dist/formularz-linux.zip`)*.
+   - `target/dist/document-generator-windows.zip`
+   *(skrypt równolegle generuje również wersję dla Linuksa: `target/dist/document-generator-linux.zip`)*.
 
 ---
 
 ## 4. Zawartość paczki Windows i uruchomienie przez użytkownika
 
-### Struktura paczki `formularz-windows.zip`:
+### Struktura paczki `document-generator-windows.zip`:
 ```text
-formularz/
-├── formularz.exe       # Główny plik uruchamiający aplikację
+document-generator/
+├── document-generator.exe       # Główny plik uruchamiający aplikację
 ├── jre/                # Wbudowane środowisko Java 25 (x64)
 ├── config/
 │   └── fields.yaml     # Konfiguracja pól formularza
@@ -95,8 +95,8 @@ formularz/
 
 ### Wymagania i uruchomienie na komputerze z Windows:
 1. Zainstalowany program **LibreOffice** (dostępny bezpłatnie na [libreoffice.org](https://www.libreoffice.org/)).
-2. Wypakowanie archiwum `formularz-windows.zip`.
-3. Uruchomienie aplikacji poprzez dwuklik na plik `formularz.exe`.
+2. Wypakowanie archiwum `document-generator-windows.zip`.
+3. Uruchomienie aplikacji poprzez dwuklik na plik `document-generator.exe`.
 4. Wygenerowane dokumenty zapisywane są w katalogu `output/dokumenty.pdf`.
 
 ---

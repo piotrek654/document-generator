@@ -122,8 +122,8 @@ Szablon `data/testowy-dokument.docx`, pola w `config/fields.yaml`: `imie`, `nazw
 ### Dystrybucja (bez JDK i bez źródeł)
 
 `scripts/build-dist.sh` buduje:
-- `target/dist/formularz-windows.zip`: `formularz.exe` (Launch4j, JAR wbudowany w exe), `jre/` (Temurin JRE 25 dla Windows), `config/`, `data/`,
-- `target/dist/formularz-linux.zip`: `formularz.jar`, `uruchom.sh`, `jre/` (Temurin JRE 25 dla Linuksa), `config/`, `data/`.
+- `target/dist/document-generator-windows.zip`: `document-generator.exe` (Launch4j, JAR wbudowany w exe), `jre/` (Temurin JRE 25 dla Windows), `config/`, `data/`,
+- `target/dist/document-generator-linux.zip`: `document-generator.jar`, `uruchom.sh`, `jre/` (Temurin JRE 25 dla Linuksa), `config/`, `data/`.
 
 JAR zawiera natywne części JavaFX dla Windows i Linuksa. Na komputerze użytkownika trzeba zainstalować tylko **LibreOffice** (na Windows w domyślnym katalogu). Exe ustawia katalog roboczy na swój folder, więc ścieżki `config/`, `data/` i `output/` działają po dwukliku.
 Sprawdzone: paczka Linux (PDF + okno) oraz exe w Wine 11.17 (start na wbudowanym JRE, okno). Na prawdziwym Windows jeszcze nie testowane.

@@ -4,4 +4,4 @@
 cd "$(dirname "$0")" || exit 1
 JAVA=./jre/bin/java
 [[ -x "$JAVA" ]] || JAVA=java
-exec "$JAVA" -jar formularz.jar "$@"
+exec "$JAVA" -jar document-generator.jar "$@"

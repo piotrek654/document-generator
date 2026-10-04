@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>pl.formularz</groupId>
-    <artifactId>formularz</artifactId>
+    <artifactId>document-generator</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <name>Generator dokumentów PDF z formularza (PoC)</name>
+    <name>Generator dokumentów PDF (document-generator)</name>
 
     <properties>
         <maven.compiler.release>25</maven.compiler.release>
@@ -119,7 +119,7 @@
                 <version>3.5.3</version>
             </plugin>
             <plugin>
-                <!-- target/formularz.jar: application with all libraries -->
+                <!-- target/document-generator.jar: application with all libraries -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.2</version>
@@ -130,7 +130,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <outputFile>${project.build.directory}/formularz.jar</outputFile>
+                            <outputFile>${project.build.directory}/document-generator.jar</outputFile>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -156,7 +156,7 @@
                 </executions>
             </plugin>
             <plugin>
-                <!-- target/formularz.exe: Windows launcher wrapping formularz.jar, runs the JRE from the jre folder next to it -->
+                <!-- target/document-generator.exe: Windows launcher wrapping document-generator.jar, runs the JRE from the jre folder next to it -->
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <artifactId>launch4j-maven-plugin</artifactId>
                 <version>2.7.0</version>
@@ -169,8 +169,8 @@
                         </goals>
                         <configuration>
                             <headerType>gui</headerType>
-                            <jar>${project.build.directory}/formularz.jar</jar>
-                            <outfile>${project.build.directory}/formularz.exe</outfile>
+                            <jar>${project.build.directory}/document-generator.jar</jar>
+                            <outfile>${project.build.directory}/document-generator.exe</outfile>
                             <chdir>.</chdir>
                             <errTitle>Generator dokumentów</errTitle>
                             <jre>
