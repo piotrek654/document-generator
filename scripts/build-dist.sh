@@ -48,15 +48,17 @@ mkdir -p "$windows"
 cp target/document-generator.exe "$windows/"
 copy_app_files "$windows"
 unpack_jre "$(download_jre windows zip)" "$windows"
-(cd "$DIST_DIR/windows" && zip -qr "$DIST_DIR/document-generator-windows.zip" document-generator)
+chmod -R a+rX,u+w,go-w "$windows"
+(cd "$DIST_DIR/windows" && zip -qr -X "$DIST_DIR/document-generator-windows.zip" document-generator)
 
 linux="$DIST_DIR/linux/document-generator"
 mkdir -p "$linux"
 cp target/document-generator.jar "$linux/"
 cp scripts/uruchom.sh "$linux/"
-chmod +x "$linux/uruchom.sh"
 copy_app_files "$linux"
 unpack_jre "$(download_jre linux tar.gz)" "$linux"
+chmod -R a+rX,u+w,go-w "$linux"
+chmod +x "$linux/uruchom.sh"
 (cd "$DIST_DIR/linux" && zip -qr "$DIST_DIR/document-generator-linux.zip" document-generator)
 
 ls -lh "$DIST_DIR"/*.zip
