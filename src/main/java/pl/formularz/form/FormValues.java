@@ -1,5 +1,8 @@
 package pl.formularz.form;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,9 +13,11 @@ import pl.formularz.amount.Amount;
 import pl.formularz.template.TemplateData;
 
 /**
- * Raw values entered in the form (String for text, select and amount fields; Boolean for checkboxes).
+ * Raw values entered in the form (String for text, select and amount fields; Boolean for checkboxes; LocalDate/String for dates).
  */
 public final class FormValues {
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
     private final FieldCatalog catalog;
     private final Map<String, Object> input;
@@ -36,6 +41,19 @@ public final class FormValues {
         for (FieldDefinition field : catalog.fields()) {
             switch (field) {
                 case FieldDefinition.Text text -> required(text, problems).ifPresent(v -> texts.put(text.name(), v));
+                case FieldDefinition.Date dateField -> required(dateField, problems).ifPresent(value -> {
+                    Object raw = input.get(dateField.name());
+                    if (raw instanceof LocalDate ld) {
+                        texts.put(dateField.name(), ld.format(DATE_FORMATTER));
+                    } else {
+                        try {
+                            LocalDate parsed = parseDate(value);
+                            texts.put(dateField.name(), parsed.format(DATE_FORMATTER));
+                        } catch (DateTimeParseException e) {
+                            problems.add("Pole „" + dateField.label() + "”: niepoprawny format daty „" + value + "” (wymagany format DD-MM-YYYY).");
+                        }
+                    }
+                });
                 case FieldDefinition.Select select -> required(select, problems).ifPresent(value -> {
                     if (select.options().contains(value)) {
                         texts.put(select.name(), value);
@@ -68,6 +86,20 @@ public final class FormValues {
             throw new FormException(problems);
         }
         return new TemplateData(texts, flags);
+    }
+
+    private static LocalDate parseDate(String value) {
+        String text = value.trim();
+        if (text.matches("\\d{2}-\\d{2}-\\d{4}")) {
+            return LocalDate.parse(text, DATE_FORMATTER);
+        }
+        if (text.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            return LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
+        }
+        if (text.matches("\\d{2}\\.\\d{2}\\.\\d{4}")) {
+            return LocalDate.parse(text, DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        }
+        return LocalDate.parse(text, DATE_FORMATTER);
     }
 
     private Optional<String> required(FieldDefinition field, List<String> problems) {

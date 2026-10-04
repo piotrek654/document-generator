@@ -14,37 +14,51 @@ import java.util.stream.Stream;
 
 import pl.formularz.pdf.PdfConverter;
 import pl.formularz.pdf.PdfMerger;
+import pl.formularz.template.DocxTemplateRenderer;
+import pl.formularz.template.ExcelTemplateRenderer;
 import pl.formularz.template.TemplateData;
 import pl.formularz.template.TemplateException;
 import pl.formularz.template.TemplateRenderer;
 
 /**
- * Fills every .docx template of a directory (in file name order) and merges the results into one PDF.
+ * Fills every .docx, .xlsx and .xls template of a directory (in file name order) and merges the results into one PDF.
  * Filled documents hold personal data, so they live only in a temp directory removed afterwards.
  */
 public class DocumentGenerator {
 
-    private final TemplateRenderer renderer;
+    private final TemplateRenderer docxRenderer;
+    private final TemplateRenderer excelRenderer;
     private final PdfConverter converter;
     private final PdfMerger merger;
 
-    public DocumentGenerator(TemplateRenderer renderer, PdfConverter converter, PdfMerger merger) {
-        this.renderer = renderer;
+    public DocumentGenerator(TemplateRenderer docxRenderer, TemplateRenderer excelRenderer, PdfConverter converter, PdfMerger merger) {
+        this.docxRenderer = docxRenderer;
+        this.excelRenderer = excelRenderer;
         this.converter = converter;
         this.merger = merger;
+    }
+
+    public DocumentGenerator(TemplateRenderer docxRenderer, PdfConverter converter, PdfMerger merger) {
+        this(docxRenderer, new ExcelTemplateRenderer(), converter, merger);
+    }
+
+    public DocumentGenerator(PdfConverter converter, PdfMerger merger) {
+        this(new DocxTemplateRenderer(), new ExcelTemplateRenderer(), converter, merger);
     }
 
     public Path generate(Path templatesDir, TemplateData data, Path pdf) {
         List<Path> templates = templatesIn(templatesDir);
         if (templates.isEmpty()) {
-            throw new TemplateException("Brak szablonów .docx w katalogu " + templatesDir);
+            throw new TemplateException("Brak szablonów (.docx, .xlsx, .xls) w katalogu " + templatesDir);
         }
         Path workDir = createTempDirectory();
         try {
             List<Path> parts = new ArrayList<>();
             for (int i = 0; i < templates.size(); i++) {
-                Path filled = workDir.resolve(i + ".docx");
-                render(templates.get(i), data, filled);
+                Path template = templates.get(i);
+                String extension = extensionOf(template);
+                Path filled = workDir.resolve(i + extension);
+                render(template, data, filled);
                 Path part = workDir.resolve(i + ".pdf");
                 converter.convert(filled, part);
                 parts.add(part);
@@ -57,7 +71,7 @@ public class DocumentGenerator {
         }
     }
 
-    /** Office lock files ("~$name.docx" from Word, ".~lock.name.docx#" from LibreOffice) are skipped. */
+    /** Office lock files ("~$name.*" from Word/Excel, ".~lock.name.*#" from LibreOffice) are skipped. */
     private static List<Path> templatesIn(Path dir) {
         try (Stream<Path> files = Files.list(dir)) {
             return files
@@ -71,12 +85,14 @@ public class DocumentGenerator {
     }
 
     private static boolean isTemplate(String fileName) {
-        return fileName.toLowerCase(Locale.ROOT).endsWith(".docx")
+        String lower = fileName.toLowerCase(Locale.ROOT);
+        return (lower.endsWith(".docx") || lower.endsWith(".xlsx") || lower.endsWith(".xls"))
             && !fileName.startsWith("~$")
             && !fileName.startsWith(".~lock");
     }
 
     private void render(Path template, TemplateData data, Path filled) {
+        TemplateRenderer renderer = rendererFor(template);
         try (InputStream input = Files.newInputStream(template);
              OutputStream output = Files.newOutputStream(filled)) {
             renderer.render(input, data, output);
@@ -85,6 +101,20 @@ public class DocumentGenerator {
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot fill template " + template, e);
         }
+    }
+
+    private TemplateRenderer rendererFor(Path template) {
+        String lower = template.getFileName().toString().toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".xls") || lower.endsWith(".xlsx")) {
+            return excelRenderer;
+        }
+        return docxRenderer;
+    }
+
+    private static String extensionOf(Path path) {
+        String name = path.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        return dot >= 0 ? name.substring(dot).toLowerCase(Locale.ROOT) : "";
     }
 
     private static Path createTempDirectory() {

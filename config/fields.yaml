@@ -1,6 +1,12 @@
 # Form fields. "name" is the placeholder used in templates: {name}.
-# Types: text, select (options), amount, amount_in_words (source), checkbox ({#skresl:name}...{/skresl}).
+# Types: text, date, select (options), amount, amount_in_words (source), checkbox ({#skresl:name}...{/skresl}).
 fields:
+  - name: numer_umowy
+    label: Numer umowy
+    type: text
+  - name: data_zawarcia_umowy
+    label: Data zawarcia umowy
+    type: date
   - name: imie
     label: Imię
     type: text

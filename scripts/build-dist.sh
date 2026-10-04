@@ -36,7 +36,7 @@ unpack_jre() {  # $1 = archive, $2 = target app directory; the archive has a sin
 copy_app_files() {  # $1 = target app directory
     mkdir -p "$1/data"
     cp -r "$PROJECT_DIR/config" "$1/"
-    find "$PROJECT_DIR/data" -maxdepth 1 -name '*.docx' ! -name '.~lock*' -exec cp {} "$1/data/" \;
+    find "$PROJECT_DIR/data" -maxdepth 1 \( -name '*.docx' -o -name '*.xlsx' -o -name '*.xls' \) ! -name '.~lock*' ! -name '~$*' -exec cp {} "$1/data/" \;
 }
 
 pack_windows_zip() {  # $1 = source_dir, $2 = output_zip, $3 = base_dir_name

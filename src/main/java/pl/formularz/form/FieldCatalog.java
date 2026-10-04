@@ -36,6 +36,7 @@ public record FieldCatalog(List<FieldDefinition> fields) {
         FieldDefinition toDefinition() {
             return switch (type) {
                 case "text" -> new FieldDefinition.Text(name, label);
+                case "date" -> new FieldDefinition.Date(name, label);
                 case "select" -> new FieldDefinition.Select(name, label, options);
                 case "amount" -> new FieldDefinition.Amount(name, label);
                 case "amount_in_words" -> new FieldDefinition.AmountInWords(name, label, source);

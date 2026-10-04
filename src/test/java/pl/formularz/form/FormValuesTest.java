@@ -18,6 +18,9 @@ class FormValuesTest {
           - name: imie
             label: Imię
             type: text
+          - name: data_zawarcia
+            label: Data zawarcia
+            type: date
           - name: jednostka
             label: Jednostka
             type: select
@@ -41,12 +44,14 @@ class FormValuesTest {
     void buildsTemplateDataWithFormattedAndComputedValues() {
         TemplateData data = FormValues.of(catalog, Map.of(
             "imie", "Jan",
+            "data_zawarcia", java.time.LocalDate.of(2026, 10, 4),
             "jednostka", "dziennie",
             "kwota", "1234,5",
             "zgoda", true)).toTemplateData();
 
         assertThat(data.texts()).containsExactlyInAnyOrderEntriesOf(Map.of(
             "imie", "Jan",
+            "data_zawarcia", "04-10-2026",
             "jednostka", "dziennie",
             "kwota", "1 234,50",
             "kwota_slownie", "tysiąc dwieście trzydzieści cztery złote pięćdziesiąt groszy"));
@@ -54,8 +59,34 @@ class FormValuesTest {
     }
 
     @Test
+    void acceptsVariousDateStringFormatsAndNormalizesToDdMmYyyy() {
+        TemplateData data = FormValues.of(catalog, Map.of(
+            "imie", "Jan",
+            "data_zawarcia", "2026-10-04",
+            "jednostka", "dziennie",
+            "kwota", "100",
+            "zgoda", true)).toTemplateData();
+
+        assertThat(data.texts()).containsEntry("data_zawarcia", "04-10-2026");
+    }
+
+    @Test
+    void rejectsInvalidDateFormat() {
+        FormValues values = FormValues.of(catalog, Map.of(
+            "imie", "Jan",
+            "data_zawarcia", "niepoprawna_data",
+            "jednostka", "dziennie",
+            "kwota", "100"));
+
+        assertThatThrownBy(values::toTemplateData)
+            .isInstanceOf(FormException.class)
+            .hasMessageContaining("Data zawarcia")
+            .hasMessageContaining("DD-MM-YYYY");
+    }
+
+    @Test
     void treatsMissingCheckboxAsUnchecked() {
-        TemplateData data = FormValues.of(catalog, Map.of("imie", "Jan", "jednostka", "dziennie", "kwota", "1"))
+        TemplateData data = FormValues.of(catalog, Map.of("imie", "Jan", "data_zawarcia", "2026-10-04", "jednostka", "dziennie", "kwota", "1"))
             .toTemplateData();
 
         assertThat(data.flags()).containsEntry("zgoda", false);
@@ -63,7 +94,7 @@ class FormValuesTest {
 
     @Test
     void rejectsOptionOutsideSelectList() {
-        FormValues values = FormValues.of(catalog, Map.of("imie", "Jan", "jednostka", "tygodniowo", "kwota", "1"));
+        FormValues values = FormValues.of(catalog, Map.of("imie", "Jan", "data_zawarcia", "2026-10-04", "jednostka", "tygodniowo", "kwota", "1"));
 
         assertThatThrownBy(values::toTemplateData)
             .isInstanceOf(FormException.class)
@@ -73,7 +104,7 @@ class FormValuesTest {
 
     @Test
     void reportsInvalidAmountByFieldLabel() {
-        FormValues values = FormValues.of(catalog, Map.of("imie", "Jan", "jednostka", "dziennie", "kwota", "dużo"));
+        FormValues values = FormValues.of(catalog, Map.of("imie", "Jan", "data_zawarcia", "2026-10-04", "jednostka", "dziennie", "kwota", "dużo"));
 
         assertThatThrownBy(values::toTemplateData)
             .isInstanceOf(FormException.class)
@@ -88,6 +119,7 @@ class FormValuesTest {
         assertThatThrownBy(values::toTemplateData)
             .isInstanceOf(FormException.class)
             .hasMessageContaining("Imię")
+            .hasMessageContaining("Data zawarcia")
             .hasMessageContaining("Jednostka")
             .hasMessageContaining("Kwota");
     }

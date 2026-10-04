@@ -1,6 +1,6 @@
 # Document Generator — Generator dokumentów PDF
 
-Aplikacja desktopowa w języku Java służąca do automatycznego generowania i scalania dokumentów PDF z wielu szablonów `.docx` (Word) na podstawie danych wprowadzonych w formularzu (interfejs graficzny JavaFX) lub przekazanych z wiersza poleceń (CLI).
+Aplikacja desktopowa w języku Java służąca do automatycznego generowania i scalania dokumentów PDF z wielu szablonów `.docx` (Word) oraz `.xlsx`/`.xls` (Excel) na podstawie danych wprowadzonych w formularzu (interfejs graficzny JavaFX) lub przekazanych z wiersza poleceń (CLI).
 
 ---
 
@@ -9,7 +9,7 @@ Aplikacja desktopowa w języku Java służąca do automatycznego generowania i s
 ### Środowisko programistyczne (do kompilacji i budowania)
 - **JDK (Java Development Kit) 25** (np. Eclipse Temurin 25)
 - **Apache Maven 3.8+**
-- **LibreOffice** (wymagany do konwersji `.docx` do formatu PDF; testy integracyjne konwertera są uruchamiane tylko wtedy, gdy LibreOffice jest zainstalowany w systemie)
+- **LibreOffice** (wymagany do konwersji `.docx` i `.xlsx`/`.xls` do formatu PDF; testy integracyjne konwertera są uruchamiane tylko wtedy, gdy LibreOffice jest zainstalowany w systemie)
 - **Narzędzia powłoki Bash** (do skryptu dystrybucyjnego): `bash`, `curl`, `zip`, `unzip`, `tar` oraz dostęp do Internetu (do pobrania JRE)
 
 ### Środowisko uruchomieniowe użytkownika końcowego
@@ -92,7 +92,7 @@ document-generator/
 ├── config/
 │   └── fields.yaml              # Konfiguracja pól formularza
 └── data/
-    └── *.docx                   # Szablony dokumentów
+    └── *                        # Szablony dokumentów (.docx, .xlsx, .xls)
 ```
 
 ### Wymagania i uruchomienie na komputerze z Windows:
@@ -105,8 +105,8 @@ document-generator/
 
 ## 5. Struktura katalogów projektu
 
-- `config/fields.yaml` — definicje pól formularza (tekst, kwota, listy wyboru, checkboxy, kwota słownie).
-- `data/` — szablony dokumentów w formacie `.docx` z placeholderami `{nazwa_pola}` oraz blokami `{#skresl:checkbox}...{/skresl}`.
+- `config/fields.yaml` — definicje pól formularza (tekst, data, kwota, listy wyboru, checkboxy, kwota słownie).
+- `data/` — szablony dokumentów w formacie `.docx`, `.xlsx` oraz `.xls` z placeholderami `{nazwa_pola}` oraz blokami `{#skresl:checkbox}...{/skresl}`.
 - `output/` — domyślny katalog zapisu wygenerowanego scalonego pliku PDF (`dokumenty.pdf`).
 - `scripts/build-dist.sh` — skrypt budujący kompletne paczki dystrybucyjne z wbudowanym JRE.
 - `scripts/uruchom.sh` — skrypt startowy dla środowiska Linux.

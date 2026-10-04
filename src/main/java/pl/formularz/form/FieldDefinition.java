@@ -14,6 +14,9 @@ public sealed interface FieldDefinition {
     record Text(String name, String label) implements FieldDefinition {
     }
 
+    record Date(String name, String label) implements FieldDefinition {
+    }
+
     record Select(String name, String label, List<String> options) implements FieldDefinition {
 
         public Select {

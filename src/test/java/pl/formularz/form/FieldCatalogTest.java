@@ -18,7 +18,7 @@ class FieldCatalogTest {
             FieldCatalog catalog = FieldCatalog.load(yaml);
 
             assertThat(catalog.fields()).extracting(FieldDefinition::name).containsExactly(
-                "imie", "nazwisko", "pesel", "nazwa_firmy", "kwota", "jednostka", "kwota_slownie",
+                "numer_umowy", "data_zawarcia_umowy", "imie", "nazwisko", "pesel", "nazwa_firmy", "kwota", "jednostka", "kwota_slownie",
                 "dodatkowy_checkbox");
         }
     }
@@ -26,7 +26,7 @@ class FieldCatalogTest {
     @Test
     void readsSelectOptionsInOrder() throws IOException {
         try (InputStream yaml = Files.newInputStream(Path.of("config/fields.yaml"))) {
-            FieldDefinition company = FieldCatalog.load(yaml).fields().get(3);
+            FieldDefinition company = FieldCatalog.load(yaml).fields().get(5);
 
             assertThat(company).isEqualTo(new FieldDefinition.Select("nazwa_firmy", "Nazwa firmy",
                 List.of("Firma 1", "Firma 2", "Firma z bardzo długą nazwą")));

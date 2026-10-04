@@ -16,9 +16,9 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
  */
 public class DocxTemplateRenderer implements TemplateRenderer {
 
-    private static final Pattern STRIKE_BLOCK = Pattern.compile("\\{#skresl:([a-z0-9_]+)}(.*?)\\{/skresl}");
-    private static final Pattern STRIKE_MARKER = Pattern.compile("\\{#skresl:[a-z0-9_]+}|\\{/skresl}");
-    private static final Pattern PLACEHOLDER = Pattern.compile("\\{([a-z0-9_]+)}");
+    private static final Pattern STRIKE_BLOCK = Pattern.compile("\\{#skresl:([\\p{L}0-9_]+)}(.*?)\\{/skresl}");
+    private static final Pattern STRIKE_MARKER = Pattern.compile("\\{#skresl:[\\p{L}0-9_]+}|\\{/skresl}");
+    private static final Pattern PLACEHOLDER = Pattern.compile("\\{([\\p{L}0-9_]+)}");
     private static final int FLAG_GROUP = 1;
     private static final int CONTENT_GROUP = 2;
     private static final int NAME_GROUP = 1;
@@ -39,7 +39,7 @@ public class DocxTemplateRenderer implements TemplateRenderer {
         // Right to left, so offsets of earlier matches stay valid after each edit.
         for (MatchResult block : matchesFromLast(STRIKE_BLOCK, text.text())) {
             String flag = block.group(FLAG_GROUP);
-            Boolean applies = data.flags().get(flag);
+            Boolean applies = data.resolveFlag(flag);
             if (applies == null) {
                 throw new TemplateException("Brak wartości pola wyboru '" + flag + "' dla bloku " + block.group());
             }
@@ -57,7 +57,7 @@ public class DocxTemplateRenderer implements TemplateRenderer {
 
     private static void replacePlaceholders(ParagraphText text, TemplateData data) {
         for (MatchResult placeholder : matchesFromLast(PLACEHOLDER, text.text())) {
-            String value = data.texts().get(placeholder.group(NAME_GROUP));
+            String value = data.resolveText(placeholder.group(NAME_GROUP));
             if (value == null) {
                 throw new TemplateException("Brak wartości dla " + placeholder.group()
                     + " w akapicie \"" + text.text() + "\"");

@@ -1,6 +1,7 @@
 package pl.formularz.app;
 
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -15,6 +16,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -27,6 +29,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import pl.formularz.amount.Amount;
 import pl.formularz.form.FieldCatalog;
@@ -121,6 +126,7 @@ public class FormApp extends Application {
     private Node inputFor(FieldDefinition field) {
         return switch (field) {
             case FieldDefinition.Text text -> textInput(text.name());
+            case FieldDefinition.Date date -> dateInput(date.name());
             case FieldDefinition.Amount amount -> {
                 TextField input = textInput(amount.name());
                 amountInputs.put(amount.name(), input);
@@ -140,6 +146,33 @@ public class FormApp extends Application {
             }
             case FieldDefinition.AmountInWords words -> amountInWordsPreview(words);
         };
+    }
+
+    private DatePicker dateInput(String name) {
+        DatePicker input = new DatePicker(LocalDate.now());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        input.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(LocalDate date) {
+                return date != null ? formatter.format(date) : "";
+            }
+
+            @Override
+            public LocalDate fromString(String string) {
+                if (string != null && !string.isBlank()) {
+                    try {
+                        return LocalDate.parse(string.trim(), formatter);
+                    } catch (DateTimeParseException e) {
+                        return null;
+                    }
+                }
+                return null;
+            }
+        });
+        input.setPromptText("DD-MM-YYYY");
+        input.setMaxWidth(Double.MAX_VALUE);
+        readers.put(name, input::getValue);
+        return input;
     }
 
     private TextField textInput(String name) {
