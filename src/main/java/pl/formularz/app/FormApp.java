@@ -58,6 +58,7 @@ public class FormApp extends Application {
 
     private final Map<String, Supplier<Object>> readers = new LinkedHashMap<>();
     private final Map<String, TextField> amountInputs = new LinkedHashMap<>();
+    private final Map<String, Node> fieldControls = new LinkedHashMap<>();
     private FieldCatalog catalog;
     private LibreOfficePdfConverter converter;
 
@@ -124,7 +125,7 @@ public class FormApp extends Application {
     }
 
     private Node inputFor(FieldDefinition field) {
-        return switch (field) {
+        Node control = switch (field) {
             case FieldDefinition.Text text -> textInput(text.name());
             case FieldDefinition.Date date -> dateInput(date.name());
             case FieldDefinition.Amount amount -> {
@@ -136,6 +137,7 @@ public class FormApp extends Application {
                 ComboBox<String> input = new ComboBox<>();
                 input.getItems().setAll(select.options());
                 input.setMaxWidth(Double.MAX_VALUE);
+                input.valueProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
                 readers.put(select.name(), input::getValue);
                 yield input;
             }
@@ -146,6 +148,8 @@ public class FormApp extends Application {
             }
             case FieldDefinition.AmountInWords words -> amountInWordsPreview(words);
         };
+        fieldControls.put(field.name(), control);
+        return control;
     }
 
     private DatePicker dateInput(String name) {
@@ -171,12 +175,32 @@ public class FormApp extends Application {
         });
         input.setPromptText("DD-MM-YYYY");
         input.setMaxWidth(Double.MAX_VALUE);
-        readers.put(name, input::getValue);
+        input.valueProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
+        input.getEditor().textProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
+        readers.put(name, () -> {
+            String editorText = input.getEditor().getText();
+            if (editorText == null || editorText.isEmpty()) {
+                return "";
+            }
+            LocalDate val = input.getValue();
+            if (val != null && input.getConverter().toString(val).equals(editorText.trim())) {
+                return val;
+            }
+            try {
+                LocalDate parsed = input.getConverter().fromString(editorText);
+                if (parsed != null) {
+                    return parsed;
+                }
+            } catch (Exception ignored) {
+            }
+            return editorText;
+        });
         return input;
     }
 
     private TextField textInput(String name) {
         TextField input = new TextField();
+        input.textProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
         readers.put(name, input::getText);
         return input;
     }
@@ -196,6 +220,9 @@ public class FormApp extends Application {
     }
 
     private static String spell(String amount) {
+        if (amount == null || amount.isBlank()) {
+            return "";
+        }
         try {
             return Amount.parse(amount).inWords();
         } catch (IllegalArgumentException e) {
@@ -204,13 +231,23 @@ public class FormApp extends Application {
     }
 
     private void generate(Button button) {
+        fieldControls.values().forEach(node -> node.setStyle(""));
         Map<String, Object> input = new LinkedHashMap<>();
         readers.forEach((name, reader) -> input.put(name, reader.get()));
         TemplateData data;
         try {
             data = FormValues.of(catalog, input).toTemplateData();
         } catch (FormException e) {
+            for (String fieldName : e.fieldNames()) {
+                Node node = fieldControls.get(fieldName);
+                if (node != null) {
+                    node.setStyle("-fx-border-color: #d32f2f; -fx-border-width: 1.5; -fx-border-radius: 3;");
+                }
+            }
             show(Alert.AlertType.WARNING, "Popraw formularz", e.getMessage());
+            return;
+        } catch (Throwable t) {
+            show(Alert.AlertType.ERROR, "Nieoczekiwany błąd", t.getMessage() != null ? t.getMessage() : t.toString());
             return;
         }
         button.setDisable(true);
@@ -220,7 +257,7 @@ public class FormApp extends Application {
                 if (converter == null) {
                     converter = LibreOfficePdfConverter.start();
                 }
-                return new DocumentGenerator(new DocxTemplateRenderer(), converter, new PdfBoxPdfMerger())
+                return new DocumentGenerator(converter, new PdfBoxPdfMerger())
                     .generate(TEMPLATES_DIR, data, OUTPUT_PDF);
             }
         };
@@ -230,14 +267,18 @@ public class FormApp extends Application {
         });
         task.setOnFailed(event -> {
             button.setDisable(false);
-            show(Alert.AlertType.ERROR, "Nie udało się wygenerować PDF", String.valueOf(task.getException()));
+            Throwable ex = task.getException();
+            String msg = ex != null && ex.getMessage() != null ? ex.getMessage() : String.valueOf(ex);
+            show(Alert.AlertType.ERROR, "Nie udało się wygenerować PDF", msg);
         });
         Thread.ofVirtual().start(task);
     }
 
     private static void show(Alert.AlertType type, String header, String content) {
-        Alert alert = new Alert(type, content);
+        Alert alert = new Alert(type);
         alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alert.showAndWait();
     }
 }

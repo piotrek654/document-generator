@@ -10,6 +10,16 @@ PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/document-generator-jre"
 DIST_DIR="$PROJECT_DIR/target/dist"
 
+if [[ -z "${JAVA_HOME:-}" || ! -d "$JAVA_HOME" || ! -f "$JAVA_HOME/bin/javac" ]]; then
+    for candidate in "$HOME/.jdks"/temurin-25* /usr/lib/jvm/java-25* /usr/lib/jvm/temurin-25*; do
+        if [[ -d "$candidate" && -f "$candidate/bin/javac" ]]; then
+            export JAVA_HOME="$candidate"
+            export PATH="$JAVA_HOME/bin:$PATH"
+            break
+        fi
+    done
+fi
+
 download_jre() {  # $1 = os (windows|linux), $2 = archive extension
     local archive="$CACHE_DIR/jre-$JAVA_FEATURE-$1-x64.$2"
     if [[ ! -f "$archive" ]]; then

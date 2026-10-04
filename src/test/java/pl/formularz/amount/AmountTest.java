@@ -24,6 +24,12 @@ class AmountTest {
         assertThat(Amount.parse(input).value()).isEqualByComparingTo(expected);
     }
 
+    @Test
+    void rejectsNullInput() {
+        assertThatThrownBy(() -> Amount.parse(null))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"", "abc", "12,345", "-5", "1,2,3"})
     void rejectsInvalidInput(String input) {

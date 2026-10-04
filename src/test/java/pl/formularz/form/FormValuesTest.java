@@ -123,4 +123,59 @@ class FormValuesTest {
             .hasMessageContaining("Jednostka")
             .hasMessageContaining("Kwota");
     }
+
+    @Test
+    void acceptsSpacesAsValidTextValue() {
+        TemplateData data = FormValues.of(catalog, Map.of(
+            "imie", " ",
+            "data_zawarcia", "04-10-2026",
+            "jednostka", "dziennie",
+            "kwota", "100"
+        )).toTemplateData();
+
+        assertThat(data.texts()).containsEntry("imie", " ");
+    }
+
+    @Test
+    void rejectsEmptyStringForTextField() {
+        FormValues values = FormValues.of(catalog, Map.of(
+            "imie", "",
+            "data_zawarcia", "04-10-2026",
+            "jednostka", "dziennie",
+            "kwota", "100"
+        ));
+
+        assertThatThrownBy(values::toTemplateData)
+            .isInstanceOf(FormException.class)
+            .hasMessageContaining("Imię");
+    }
+
+    @Test
+    void includesProblemFieldNamesInException() {
+        FormValues values = FormValues.of(catalog, Map.of());
+
+        try {
+            values.toTemplateData();
+        } catch (FormException e) {
+            assertThat(e.fieldNames()).contains("imie", "data_zawarcia", "jednostka", "kwota");
+        }
+    }
+
+    @Test
+    void handlesMapWithNullValuesGracefullyWithoutThrowingNullPointerException() {
+        java.util.Map<String, Object> inputWithNulls = new java.util.HashMap<>();
+        inputWithNulls.put("imie", null);
+        inputWithNulls.put("jednostka", null);
+        inputWithNulls.put("kwota", null);
+        inputWithNulls.put("data_zawarcia", null);
+
+        FormValues values = FormValues.of(catalog, inputWithNulls);
+
+        assertThatThrownBy(values::toTemplateData)
+            .isInstanceOf(FormException.class)
+            .hasMessageContaining("Imię")
+            .hasMessageContaining("Data zawarcia")
+            .hasMessageContaining("Jednostka")
+            .hasMessageContaining("Kwota");
+    }
 }

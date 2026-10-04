@@ -20,6 +20,9 @@ public record Amount(BigDecimal value) {
 
     /** Accepts "1234,5", "1 234,50", "1234.5"; rejects negative values and more than two decimal places. */
     public static Amount parse(String input) {
+        if (input == null) {
+            throw new IllegalArgumentException("Kwota nie może być pusta (null)");
+        }
         String compact = WHITESPACE.matcher(input).replaceAll("");
         if (!INPUT.matcher(compact).matches()) {
             throw new IllegalArgumentException("Niepoprawna kwota: '" + input + "'");

@@ -24,7 +24,7 @@ public final class FormValues {
 
     private FormValues(FieldCatalog catalog, Map<String, Object> input) {
         this.catalog = catalog;
-        this.input = Map.copyOf(input);
+        this.input = input == null ? new HashMap<>() : new HashMap<>(input);
     }
 
     public static FormValues of(FieldCatalog catalog, Map<String, Object> input) {
@@ -37,39 +37,47 @@ public final class FormValues {
         Map<String, Boolean> flags = new HashMap<>();
         Map<String, Amount> amounts = new HashMap<>();
         List<String> problems = new ArrayList<>();
+        List<String> problemFields = new ArrayList<>();
 
         for (FieldDefinition field : catalog.fields()) {
             switch (field) {
-                case FieldDefinition.Text text -> required(text, problems).ifPresent(v -> texts.put(text.name(), v));
-                case FieldDefinition.Date dateField -> required(dateField, problems).ifPresent(value -> {
-                    Object raw = input.get(dateField.name());
-                    if (raw instanceof LocalDate ld) {
-                        texts.put(dateField.name(), ld.format(DATE_FORMATTER));
-                    } else {
-                        try {
-                            LocalDate parsed = parseDate(value);
-                            texts.put(dateField.name(), parsed.format(DATE_FORMATTER));
-                        } catch (DateTimeParseException e) {
-                            problems.add("Pole „" + dateField.label() + "”: niepoprawny format daty „" + value + "” (wymagany format DD-MM-YYYY).");
+                case FieldDefinition.Text text ->
+                    required(text, problems, problemFields).ifPresent(v -> texts.put(text.name(), v));
+                case FieldDefinition.Date dateField ->
+                    required(dateField, problems, problemFields).ifPresent(value -> {
+                        Object raw = input.get(dateField.name());
+                        if (raw instanceof LocalDate ld) {
+                            texts.put(dateField.name(), ld.format(DATE_FORMATTER));
+                        } else {
+                            try {
+                                LocalDate parsed = parseDate(value);
+                                texts.put(dateField.name(), parsed.format(DATE_FORMATTER));
+                            } catch (DateTimeParseException e) {
+                                problems.add("Pole „" + dateField.label() + "”: niepoprawny format daty „" + value + "” (wymagany format DD-MM-YYYY).");
+                                problemFields.add(dateField.name());
+                            }
                         }
-                    }
-                });
-                case FieldDefinition.Select select -> required(select, problems).ifPresent(value -> {
-                    if (select.options().contains(value)) {
-                        texts.put(select.name(), value);
-                    } else {
-                        problems.add("Pole „" + select.label() + "”: niedozwolona wartość „" + value + "”.");
-                    }
-                });
-                case FieldDefinition.Amount amountField -> required(amountField, problems).ifPresent(value -> {
-                    try {
-                        Amount amount = Amount.parse(value);
-                        amounts.put(amountField.name(), amount);
-                        texts.put(amountField.name(), amount.formatPl());
-                    } catch (IllegalArgumentException e) {
-                        problems.add("Pole „" + amountField.label() + "”: niepoprawna kwota „" + value + "”.");
-                    }
-                });
+                    });
+                case FieldDefinition.Select select ->
+                    required(select, problems, problemFields).ifPresent(value -> {
+                        if (select.options().contains(value)) {
+                            texts.put(select.name(), value);
+                        } else {
+                            problems.add("Pole „" + select.label() + "”: niedozwolona wartość „" + value + "”.");
+                            problemFields.add(select.name());
+                        }
+                    });
+                case FieldDefinition.Amount amountField ->
+                    required(amountField, problems, problemFields).ifPresent(value -> {
+                        try {
+                            Amount amount = Amount.parse(value);
+                            amounts.put(amountField.name(), amount);
+                            texts.put(amountField.name(), amount.formatPl());
+                        } catch (IllegalArgumentException e) {
+                            problems.add("Pole „" + amountField.label() + "”: niepoprawna kwota „" + value + "”.");
+                            problemFields.add(amountField.name());
+                        }
+                    });
                 case FieldDefinition.Checkbox checkbox ->
                     flags.put(checkbox.name(), Boolean.TRUE.equals(input.get(checkbox.name())));
                 case FieldDefinition.AmountInWords ignored -> {
@@ -83,7 +91,7 @@ public final class FormValues {
             }
         }
         if (!problems.isEmpty()) {
-            throw new FormException(problems);
+            throw new FormException(problems, problemFields);
         }
         return new TemplateData(texts, flags);
     }
@@ -102,11 +110,17 @@ public final class FormValues {
         return LocalDate.parse(text, DATE_FORMATTER);
     }
 
-    private Optional<String> required(FieldDefinition field, List<String> problems) {
+    private Optional<String> required(FieldDefinition field, List<String> problems, List<String> problemFields) {
         Object value = input.get(field.name());
-        String text = value == null ? "" : value.toString().strip();
+        if (value == null) {
+            problems.add("Pole „" + field.label() + "” jest wymagane.");
+            problemFields.add(field.name());
+            return Optional.empty();
+        }
+        String text = value.toString();
         if (text.isEmpty()) {
             problems.add("Pole „" + field.label() + "” jest wymagane.");
+            problemFields.add(field.name());
             return Optional.empty();
         }
         return Optional.of(text);
