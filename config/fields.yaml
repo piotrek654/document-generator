@@ -1,0 +1,30 @@
+# Form fields. "name" is the placeholder used in templates: {name}.
+# Types: text, select (options), amount, amount_in_words (source), checkbox ({#skresl:name}...{/skresl}).
+fields:
+  - name: imie
+    label: Imię
+    type: text
+  - name: nazwisko
+    label: Nazwisko
+    type: text
+  - name: pesel
+    label: PESEL
+    type: text
+  - name: nazwa_firmy
+    label: Nazwa firmy
+    type: select
+    options: [Firma 1, Firma 2, Firma z bardzo długą nazwą]
+  - name: kwota
+    label: Kwota (zł)
+    type: amount
+  - name: jednostka
+    label: Jednostka
+    type: select
+    options: [miesięcznie, dziennie, godzinowo]
+  - name: kwota_slownie
+    label: Kwota słownie
+    type: amount_in_words
+    source: kwota
+  - name: dodatkowy_checkbox
+    label: Dodatkowy akapit dotyczy
+    type: checkbox
