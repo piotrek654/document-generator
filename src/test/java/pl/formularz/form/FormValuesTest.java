@@ -21,6 +21,9 @@ class FormValuesTest {
           - name: data_zawarcia
             label: Data zawarcia
             type: date
+          - name: data_rozpoczecia_umowy
+            label: Data rozpoczęcia umowy
+            type: date
           - name: jednostka
             label: Jednostka
             type: select
@@ -45,6 +48,7 @@ class FormValuesTest {
         TemplateData data = FormValues.of(catalog, Map.of(
             "imie", "Jan",
             "data_zawarcia", java.time.LocalDate.of(2026, 10, 4),
+            "data_rozpoczecia_umowy", java.time.LocalDate.of(2026, 3, 1),
             "jednostka", "dziennie",
             "kwota", "1234,5",
             "zgoda", true)).toTemplateData();
@@ -52,6 +56,8 @@ class FormValuesTest {
         assertThat(data.texts()).containsExactlyInAnyOrderEntriesOf(Map.of(
             "imie", "Jan",
             "data_zawarcia", "04-10-2026",
+            "data_rozpoczecia_umowy", "01-03-2026",
+            "data_zakonczenia_umowy", "31-12-2026",
             "jednostka", "dziennie",
             "kwota", "1 234,50",
             "kwota_slownie", "tysiąc dwieście trzydzieści cztery PLN 50/100"));
@@ -63,11 +69,14 @@ class FormValuesTest {
         TemplateData data = FormValues.of(catalog, Map.of(
             "imie", "Jan",
             "data_zawarcia", "2026-10-04",
+            "data_rozpoczecia_umowy", "2026-03-01",
             "jednostka", "dziennie",
             "kwota", "100",
             "zgoda", true)).toTemplateData();
 
         assertThat(data.texts()).containsEntry("data_zawarcia", "04-10-2026");
+        assertThat(data.texts()).containsEntry("data_rozpoczecia_umowy", "01-03-2026");
+        assertThat(data.texts()).containsEntry("data_zakonczenia_umowy", "31-12-2026");
     }
 
     @Test
@@ -75,6 +84,7 @@ class FormValuesTest {
         FormValues values = FormValues.of(catalog, Map.of(
             "imie", "Jan",
             "data_zawarcia", "niepoprawna_data",
+            "data_rozpoczecia_umowy", "2026-03-01",
             "jednostka", "dziennie",
             "kwota", "100"));
 
@@ -86,7 +96,12 @@ class FormValuesTest {
 
     @Test
     void treatsMissingCheckboxAsUnchecked() {
-        TemplateData data = FormValues.of(catalog, Map.of("imie", "Jan", "data_zawarcia", "2026-10-04", "jednostka", "dziennie", "kwota", "1"))
+        TemplateData data = FormValues.of(catalog, Map.of(
+            "imie", "Jan",
+            "data_zawarcia", "2026-10-04",
+            "data_rozpoczecia_umowy", "2026-03-01",
+            "jednostka", "dziennie",
+            "kwota", "1"))
             .toTemplateData();
 
         assertThat(data.flags()).containsEntry("zgoda", false);
@@ -94,7 +109,12 @@ class FormValuesTest {
 
     @Test
     void rejectsOptionOutsideSelectList() {
-        FormValues values = FormValues.of(catalog, Map.of("imie", "Jan", "data_zawarcia", "2026-10-04", "jednostka", "tygodniowo", "kwota", "1"));
+        FormValues values = FormValues.of(catalog, Map.of(
+            "imie", "Jan",
+            "data_zawarcia", "2026-10-04",
+            "data_rozpoczecia_umowy", "2026-03-01",
+            "jednostka", "tygodniowo",
+            "kwota", "1"));
 
         assertThatThrownBy(values::toTemplateData)
             .isInstanceOf(FormException.class)
@@ -104,7 +124,12 @@ class FormValuesTest {
 
     @Test
     void reportsInvalidAmountByFieldLabel() {
-        FormValues values = FormValues.of(catalog, Map.of("imie", "Jan", "data_zawarcia", "2026-10-04", "jednostka", "dziennie", "kwota", "dużo"));
+        FormValues values = FormValues.of(catalog, Map.of(
+            "imie", "Jan",
+            "data_zawarcia", "2026-10-04",
+            "data_rozpoczecia_umowy", "2026-03-01",
+            "jednostka", "dziennie",
+            "kwota", "dużo"));
 
         assertThatThrownBy(values::toTemplateData)
             .isInstanceOf(FormException.class)
@@ -120,6 +145,7 @@ class FormValuesTest {
             .isInstanceOf(FormException.class)
             .hasMessageContaining("Imię")
             .hasMessageContaining("Data zawarcia")
+            .hasMessageContaining("Data rozpoczęcia umowy")
             .hasMessageContaining("Jednostka")
             .hasMessageContaining("Kwota");
     }
@@ -129,6 +155,7 @@ class FormValuesTest {
         TemplateData data = FormValues.of(catalog, Map.of(
             "imie", " ",
             "data_zawarcia", "04-10-2026",
+            "data_rozpoczecia_umowy", "01-03-2026",
             "jednostka", "dziennie",
             "kwota", "100"
         )).toTemplateData();
@@ -141,6 +168,7 @@ class FormValuesTest {
         FormValues values = FormValues.of(catalog, Map.of(
             "imie", "",
             "data_zawarcia", "04-10-2026",
+            "data_rozpoczecia_umowy", "01-03-2026",
             "jednostka", "dziennie",
             "kwota", "100"
         ));
@@ -157,7 +185,7 @@ class FormValuesTest {
         try {
             values.toTemplateData();
         } catch (FormException e) {
-            assertThat(e.fieldNames()).contains("imie", "data_zawarcia", "jednostka", "kwota");
+            assertThat(e.fieldNames()).contains("imie", "data_zawarcia", "data_rozpoczecia_umowy", "jednostka", "kwota");
         }
     }
 
@@ -168,6 +196,7 @@ class FormValuesTest {
         inputWithNulls.put("jednostka", null);
         inputWithNulls.put("kwota", null);
         inputWithNulls.put("data_zawarcia", null);
+        inputWithNulls.put("data_rozpoczecia_umowy", null);
 
         FormValues values = FormValues.of(catalog, inputWithNulls);
 
@@ -175,7 +204,37 @@ class FormValuesTest {
             .isInstanceOf(FormException.class)
             .hasMessageContaining("Imię")
             .hasMessageContaining("Data zawarcia")
+            .hasMessageContaining("Data rozpoczęcia umowy")
             .hasMessageContaining("Jednostka")
             .hasMessageContaining("Kwota");
+    }
+
+    @Test
+    void computesDataZakonczeniaUmowyAsLastDayOfStartYear() {
+        TemplateData data = FormValues.of(catalog, Map.of(
+            "imie", "Jan",
+            "data_zawarcia", "01-01-2025",
+            "data_rozpoczecia_umowy", "2025-05-15",
+            "jednostka", "dziennie",
+            "kwota", "100",
+            "zgoda", true)).toTemplateData();
+
+        assertThat(data.texts())
+            .containsEntry("data_rozpoczecia_umowy", "15-05-2025")
+            .containsEntry("data_zakonczenia_umowy", "31-12-2025");
+    }
+
+    @Test
+    void computesDataZakonczeniaUmowyForLeapYear() {
+        TemplateData data = FormValues.of(catalog, Map.of(
+            "imie", "Jan",
+            "data_zawarcia", "01-01-2024",
+            "data_rozpoczecia_umowy", "29.02.2024",
+            "jednostka", "dziennie",
+            "kwota", "100")).toTemplateData();
+
+        assertThat(data.texts())
+            .containsEntry("data_rozpoczecia_umowy", "29-02-2024")
+            .containsEntry("data_zakonczenia_umowy", "31-12-2024");
     }
 }

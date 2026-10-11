@@ -90,6 +90,11 @@ public final class FormValues {
                 texts.put(words.name(), amounts.get(words.source()).inWords());
             }
         }
+        if (texts.containsKey("data_rozpoczecia_umowy")) {
+            LocalDate startDate = parseDate(texts.get("data_rozpoczecia_umowy"));
+            LocalDate endDate = LocalDate.of(startDate.getYear(), 12, 31);
+            texts.put("data_zakonczenia_umowy", endDate.format(DATE_FORMATTER));
+        }
         if (!problems.isEmpty()) {
             throw new FormException(problems, problemFields);
         }

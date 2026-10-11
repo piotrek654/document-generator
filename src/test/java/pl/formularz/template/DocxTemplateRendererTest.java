@@ -77,6 +77,16 @@ class DocxTemplateRendererTest {
             .hasMessageContaining("{#skresl:zgoda}");
     }
 
+    @Test
+    void fillsContractDates() throws IOException {
+        byte[] template = templateWithText("Umowa od {data_rozpoczecia_umowy} do {data_zakonczenia_umowy}.");
+        XWPFDocument result = render(template, new TemplateData(
+            Map.of("data_rozpoczecia_umowy", "01-03-2026", "data_zakonczenia_umowy", "31-12-2026"),
+            Map.of()));
+
+        assertThat(allText(result)).isEqualTo("Umowa od 01-03-2026 do 31-12-2026.");
+    }
+
     private static TemplateData sampleData(boolean optionalParagraphApplies) {
         return new TemplateData(
             Map.of(

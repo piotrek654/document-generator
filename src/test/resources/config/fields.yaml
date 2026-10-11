@@ -7,6 +7,9 @@ fields:
   - name: data_zawarcia_umowy
     label: Data zawarcia umowy
     type: date
+  - name: data_rozpoczecia_umowy
+    label: Data rozpoczęcia umowy
+    type: date
   - name: imie
     label: Imię
     type: text

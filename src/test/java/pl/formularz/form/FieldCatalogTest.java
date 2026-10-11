@@ -20,8 +20,10 @@ class FieldCatalogTest {
             FieldCatalog catalog = FieldCatalog.load(yaml);
 
             assertThat(catalog.fields()).extracting(FieldDefinition::name).containsExactly(
-                "numer_umowy", "data_zawarcia_umowy", "imie", "nazwisko", "pesel", "nazwa_firmy", "kwota", "jednostka", "kwota_slownie",
+                "numer_umowy", "data_zawarcia_umowy", "data_rozpoczecia_umowy", "imie", "nazwisko", "pesel", "nazwa_firmy", "kwota", "jednostka", "kwota_slownie",
                 "dodatkowy_checkbox");
+            assertThat(catalog.fields()).extracting(FieldDefinition::name)
+                .doesNotContain("data_zakonczenia_umowy");
         }
     }
 
@@ -30,13 +32,13 @@ class FieldCatalogTest {
         FieldCatalog catalog = FieldCatalog.load(TEST_CONFIG_PATH);
 
         assertThat(catalog.fields()).extracting(FieldDefinition::name).contains(
-            "nazwa_firmy", "numer_umowy", "imie", "nazwisko", "pesel");
+            "nazwa_firmy", "numer_umowy", "data_rozpoczecia_umowy", "imie", "nazwisko", "pesel");
     }
 
     @Test
     void readsSelectOptionsInOrder() throws IOException {
         try (InputStream yaml = Files.newInputStream(TEST_CONFIG_PATH)) {
-            FieldDefinition company = FieldCatalog.load(yaml).fields().get(5);
+            FieldDefinition company = FieldCatalog.load(yaml).fields().get(6);
 
             assertThat(company).isEqualTo(new FieldDefinition.Select("nazwa_firmy", "Nazwa firmy",
                 List.of("Firma 1", "Firma 2", "Firma z bardzo długą nazwą")));
