@@ -94,6 +94,7 @@ public final class FormValues {
             LocalDate startDate = parseDate(texts.get("data_rozpoczecia_umowy"));
             LocalDate endDate = LocalDate.of(startDate.getYear(), 12, 31);
             texts.put("data_zakonczenia_umowy", endDate.format(DATE_FORMATTER));
+            texts.put("rok", String.valueOf(startDate.getYear()));
         }
         if (!problems.isEmpty()) {
             throw new FormException(problems, problemFields);

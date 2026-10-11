@@ -58,6 +58,7 @@ class FormValuesTest {
             "data_zawarcia", "04-10-2026",
             "data_rozpoczecia_umowy", "01-03-2026",
             "data_zakonczenia_umowy", "31-12-2026",
+            "rok", "2026",
             "jednostka", "dziennie",
             "kwota", "1 234,50",
             "kwota_slownie", "tysiąc dwieście trzydzieści cztery PLN 50/100"));
@@ -77,6 +78,7 @@ class FormValuesTest {
         assertThat(data.texts()).containsEntry("data_zawarcia", "04-10-2026");
         assertThat(data.texts()).containsEntry("data_rozpoczecia_umowy", "01-03-2026");
         assertThat(data.texts()).containsEntry("data_zakonczenia_umowy", "31-12-2026");
+        assertThat(data.texts()).containsEntry("rok", "2026");
     }
 
     @Test
@@ -210,7 +212,7 @@ class FormValuesTest {
     }
 
     @Test
-    void computesDataZakonczeniaUmowyAsLastDayOfStartYear() {
+    void computesDataZakonczeniaUmowyAndRokFromStartDate() {
         TemplateData data = FormValues.of(catalog, Map.of(
             "imie", "Jan",
             "data_zawarcia", "01-01-2025",
@@ -221,11 +223,12 @@ class FormValuesTest {
 
         assertThat(data.texts())
             .containsEntry("data_rozpoczecia_umowy", "15-05-2025")
-            .containsEntry("data_zakonczenia_umowy", "31-12-2025");
+            .containsEntry("data_zakonczenia_umowy", "31-12-2025")
+            .containsEntry("rok", "2025");
     }
 
     @Test
-    void computesDataZakonczeniaUmowyForLeapYear() {
+    void computesDataZakonczeniaUmowyAndRokForLeapYear() {
         TemplateData data = FormValues.of(catalog, Map.of(
             "imie", "Jan",
             "data_zawarcia", "01-01-2024",
@@ -235,6 +238,7 @@ class FormValuesTest {
 
         assertThat(data.texts())
             .containsEntry("data_rozpoczecia_umowy", "29-02-2024")
-            .containsEntry("data_zakonczenia_umowy", "31-12-2024");
+            .containsEntry("data_zakonczenia_umowy", "31-12-2024")
+            .containsEntry("rok", "2024");
     }
 }

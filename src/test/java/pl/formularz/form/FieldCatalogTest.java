@@ -23,7 +23,7 @@ class FieldCatalogTest {
                 "numer_umowy", "data_zawarcia_umowy", "data_rozpoczecia_umowy", "imie", "nazwisko", "pesel", "nazwa_firmy", "kwota", "jednostka", "kwota_slownie",
                 "dodatkowy_checkbox");
             assertThat(catalog.fields()).extracting(FieldDefinition::name)
-                .doesNotContain("data_zakonczenia_umowy");
+                .doesNotContain("data_zakonczenia_umowy", "rok");
         }
     }
 
