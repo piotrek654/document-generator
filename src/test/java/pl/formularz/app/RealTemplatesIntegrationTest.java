@@ -26,7 +26,7 @@ class RealTemplatesIntegrationTest {
     @Test
     void generatesMergedPdfFromActualDataFolder() throws Exception {
         assumeTrue(LibreOfficePdfConverter.isAvailable(), "LibreOffice not available");
-        Path templatesDir = Path.of("data");
+        Path templatesDir = Path.of("src/test/resources/data");
         Path outputPdf = Files.createTempFile("actual-output-", ".pdf");
 
         TemplateData data = new TemplateData(

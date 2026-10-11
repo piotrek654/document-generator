@@ -32,7 +32,7 @@ class ExcelTemplateRendererTest {
                 "nazwisko", "Żółtowski-Łącki"),
             Map.of());
 
-        File xlsFile = new File("data/arkusz-testowy.xls");
+        File xlsFile = new File("src/test/resources/data/arkusz-testowy.xls");
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (FileInputStream input = new FileInputStream(xlsFile)) {
             renderer.render(input, data, output);

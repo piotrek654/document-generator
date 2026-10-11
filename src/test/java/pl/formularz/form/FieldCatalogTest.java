@@ -12,9 +12,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class FieldCatalogTest {
 
+    private static final Path TEST_CONFIG_PATH = Path.of("src/test/resources/config/fields.yaml");
+
     @Test
     void projectCatalogDefinesAllFieldsOfSampleTemplate() throws IOException {
-        try (InputStream yaml = Files.newInputStream(Path.of("config/fields.yaml"))) {
+        try (InputStream yaml = Files.newInputStream(TEST_CONFIG_PATH)) {
             FieldCatalog catalog = FieldCatalog.load(yaml);
 
             assertThat(catalog.fields()).extracting(FieldDefinition::name).containsExactly(
@@ -24,8 +26,16 @@ class FieldCatalogTest {
     }
 
     @Test
+    void loadsCatalogDirectlyFromPath() {
+        FieldCatalog catalog = FieldCatalog.load(TEST_CONFIG_PATH);
+
+        assertThat(catalog.fields()).extracting(FieldDefinition::name).contains(
+            "nazwa_firmy", "numer_umowy", "imie", "nazwisko", "pesel");
+    }
+
+    @Test
     void readsSelectOptionsInOrder() throws IOException {
-        try (InputStream yaml = Files.newInputStream(Path.of("config/fields.yaml"))) {
+        try (InputStream yaml = Files.newInputStream(TEST_CONFIG_PATH)) {
             FieldDefinition company = FieldCatalog.load(yaml).fields().get(5);
 
             assertThat(company).isEqualTo(new FieldDefinition.Select("nazwa_firmy", "Nazwa firmy",

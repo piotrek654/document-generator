@@ -3,6 +3,8 @@ package pl.formularz.form;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +27,14 @@ public record FieldCatalog(List<FieldDefinition> fields) {
             return new FieldCatalog(file.fields().stream().map(FieldSpec::toDefinition).toList());
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot read field catalog", e);
+        }
+    }
+
+    public static FieldCatalog load(Path yamlPath) {
+        try (InputStream input = Files.newInputStream(yamlPath)) {
+            return load(input);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Cannot read field catalog from " + yamlPath, e);
         }
     }
 

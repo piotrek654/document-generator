@@ -91,7 +91,7 @@ class DocxTemplateRendererTest {
     }
 
     private XWPFDocument renderSample(TemplateData data) throws IOException {
-        try (InputStream template = getClass().getResourceAsStream("/templates/testowy-dokument.docx")) {
+        try (InputStream template = getClass().getResourceAsStream("/data/testowy-dokument.docx")) {
             return render(template.readAllBytes(), data);
         }
     }

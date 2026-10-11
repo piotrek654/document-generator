@@ -121,7 +121,7 @@ class DocumentGeneratorTest {
     }
 
     private Path templatesDir(String... namesAndTexts) throws IOException {
-        Path dir = Files.createDirectories(workDir.resolve("templates"));
+        Path dir = Files.createDirectories(workDir.resolve("data"));
         for (int i = 0; i < namesAndTexts.length; i += 2) {
             createDocx(dir.resolve(namesAndTexts[i]), namesAndTexts[i + 1]);
         }
