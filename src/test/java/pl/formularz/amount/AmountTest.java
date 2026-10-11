@@ -53,6 +53,6 @@ class AmountTest {
     @Test
     void spellsItselfInWords() {
         assertThat(Amount.parse("123,45").inWords())
-            .isEqualTo("sto dwadzieścia trzy złote czterdzieści pięć groszy");
+            .isEqualTo("sto dwadzieścia trzy PLN 45/100");
     }
 }

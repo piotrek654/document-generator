@@ -34,7 +34,7 @@ fields:
   - name: jednostka
     label: Jednostka
     type: select
-    options: [miesięcznie, godzinowo]
+    options: [pełen miesięczny zakres, godzinę]
   - name: kwota_slownie
     label: Kwota słownie
     type: amount_in_words

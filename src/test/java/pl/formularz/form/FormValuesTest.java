@@ -54,7 +54,7 @@ class FormValuesTest {
             "data_zawarcia", "04-10-2026",
             "jednostka", "dziennie",
             "kwota", "1 234,50",
-            "kwota_slownie", "tysiąc dwieście trzydzieści cztery złote pięćdziesiąt groszy"));
+            "kwota_slownie", "tysiąc dwieście trzydzieści cztery PLN 50/100"));
         assertThat(data.flags()).containsExactlyEntriesOf(Map.of("zgoda", true));
     }
 

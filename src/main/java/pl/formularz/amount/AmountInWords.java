@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Amount spelled out in Polish, e.g. "sto dwadzieścia trzy złote czterdzieści pięć groszy".
+ * Amount spelled out in Polish, e.g. "sto dwadzieścia trzy PLN 45/100".
  */
 public final class AmountInWords {
 
@@ -24,8 +24,6 @@ public final class AmountInWords {
         "sześćset", "siedemset", "osiemset", "dziewięćset"
     };
 
-    private static final PluralForms ZLOTY = new PluralForms("złoty", "złote", "złotych");
-    private static final PluralForms GROSZ = new PluralForms("grosz", "grosze", "groszy");
     /** Three-digit groups from the highest: billions, millions, thousands. */
     private static final List<Group> GROUPS = List.of(
         new Group(1_000_000_000L, new PluralForms("miliard", "miliardy", "miliardów")),
@@ -44,8 +42,8 @@ public final class AmountInWords {
     public static String of(BigDecimal value) {
         BigDecimal rounded = value.setScale(GROSZE_SCALE, RoundingMode.HALF_UP);
         long zlote = rounded.longValue();
-        int grosze = rounded.remainder(BigDecimal.ONE).movePointRight(GROSZE_SCALE).intValue();
-        return spell(zlote) + " " + ZLOTY.forCount(zlote) + " " + spell(grosze) + " " + GROSZ.forCount(grosze);
+        int grosze = rounded.remainder(BigDecimal.ONE).abs().movePointRight(GROSZE_SCALE).intValue();
+        return spell(zlote) + " PLN " + grosze + "/100";
     }
 
     private static String spell(long number) {

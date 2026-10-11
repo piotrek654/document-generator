@@ -30,7 +30,7 @@ class DocxTemplateRendererTest {
             .contains("Jan Kowalski")
             .contains("90010112345")
             .contains("dla Firma z bardzo długą nazwą i coś wnosi")
-            .contains("Mamy też 1 234,50 zł za miesięcznie, słownie tysiąc dwieście trzydzieści cztery złote pięćdziesiąt groszy.")
+            .contains("Mamy też 1 234,50 zł za miesięcznie, słownie tysiąc dwieście trzydzieści cztery PLN 50/100.")
             .doesNotContain("{", "}");
     }
 
@@ -86,7 +86,7 @@ class DocxTemplateRendererTest {
                 "nazwa_firmy", "Firma z bardzo długą nazwą",
                 "kwota", "1 234,50",
                 "jednostka", "miesięcznie",
-                "kwota_slownie", "tysiąc dwieście trzydzieści cztery złote pięćdziesiąt groszy"),
+                "kwota_slownie", "tysiąc dwieście trzydzieści cztery PLN 50/100"),
             Map.of("dodatkowy_checkbox", optionalParagraphApplies));
     }
 

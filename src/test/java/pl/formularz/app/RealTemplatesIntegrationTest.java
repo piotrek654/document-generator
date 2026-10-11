@@ -39,7 +39,7 @@ class RealTemplatesIntegrationTest {
                 "nazwa_firmy", "Firma 1",
                 "kwota", "1 234,50",
                 "jednostka", "miesięcznie",
-                "kwota_slownie", "tysiąc dwieście trzydzieści cztery złote pięćdziesiąt groszy"),
+                "kwota_slownie", "tysiąc dwieście trzydzieści cztery PLN 50/100"),
             Map.of("dodatkowy_checkbox", true));
 
         try (LibreOfficePdfConverter converter = LibreOfficePdfConverter.start()) {
