@@ -16,10 +16,6 @@ fields:
   - name: pesel
     label: PESEL
     type: text
-  - name: nazwa_firmy
-    label: Nazwa firmy
-    type: select
-    options: [Firma 1, Firma 2, Firma z bardzo długą nazwą]
   - name: kwota
     label: Kwota (zł)
     type: amount
