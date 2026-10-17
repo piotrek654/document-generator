@@ -11,16 +11,19 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
 /**
- * Renders .docx templates with {@code {name}} placeholders and {@code {#skresl:flag}...{/skresl}} blocks.
- * A block is struck through when its flag is false; the markers themselves are always removed.
+ * Renders .docx templates with {@code {name}} placeholders and {@code {#skresl:flag}...{/skresl}}
+ * or {@code {#!skresl:flag}...{/skresl}} blocks.
+ * A block is struck through when condition is met (true for {@code #skresl}, false for {@code #!skresl});
+ * the markers themselves are always removed.
  */
 public class DocxTemplateRenderer implements TemplateRenderer {
 
-    private static final Pattern STRIKE_BLOCK = Pattern.compile("\\{#skresl:([\\p{L}0-9_]+)}(.*?)\\{/skresl}");
-    private static final Pattern STRIKE_MARKER = Pattern.compile("\\{#skresl:[\\p{L}0-9_]+}|\\{/skresl}");
+    private static final Pattern STRIKE_BLOCK = Pattern.compile("\\{#(!?)skresl:([\\p{L}0-9_]+)}(.*?)\\{/skresl}");
+    private static final Pattern STRIKE_MARKER = Pattern.compile("\\{#!?skresl:[\\p{L}0-9_]+}|\\{/skresl}");
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{([\\p{L}0-9_]+)}");
-    private static final int FLAG_GROUP = 1;
-    private static final int CONTENT_GROUP = 2;
+    private static final int NEGATED_GROUP = 1;
+    private static final int FLAG_GROUP = 2;
+    private static final int CONTENT_GROUP = 3;
     private static final int NAME_GROUP = 1;
 
     @Override
@@ -38,12 +41,14 @@ public class DocxTemplateRenderer implements TemplateRenderer {
     private static void applyStrikeBlocks(ParagraphText text, TemplateData data) {
         // Right to left, so offsets of earlier matches stay valid after each edit.
         for (MatchResult block : matchesFromLast(STRIKE_BLOCK, text.text())) {
+            String negated = block.group(NEGATED_GROUP);
             String flag = block.group(FLAG_GROUP);
             Boolean applies = data.resolveFlag(flag);
             if (applies == null) {
                 throw new TemplateException("Brak wartości pola wyboru '" + flag + "' dla bloku " + block.group());
             }
-            if (!applies) {
+            boolean shouldStrike = "!".equals(negated) ? !applies : applies;
+            if (shouldStrike) {
                 text.strike(block.start(CONTENT_GROUP), block.end(CONTENT_GROUP));
             }
             text.replace(block.end(CONTENT_GROUP), block.end(), "");

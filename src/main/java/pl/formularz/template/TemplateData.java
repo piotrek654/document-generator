@@ -5,7 +5,8 @@ import java.util.Map;
 
 /**
  * Values for a template: {@code texts} replace {@code {name}} placeholders,
- * {@code flags} drive {@code {#skresl:name}...{/skresl}} blocks (false = strike through).
+ * {@code flags} drive {@code {#skresl:name}...{/skresl}} (true = strike through)
+ * and {@code {#!skresl:name}...{/skresl}} (false = strike through) blocks.
  */
 public record TemplateData(Map<String, String> texts, Map<String, Boolean> flags) {
 

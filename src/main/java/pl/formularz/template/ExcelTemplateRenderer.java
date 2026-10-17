@@ -16,15 +16,16 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 /**
  * Renders .xls and .xlsx spreadsheet templates with {@code {name}} placeholders
- * and {@code {#skresl:flag}...{/skresl}} blocks across all sheets.
+ * and {@code {#skresl:flag}...{/skresl}} or {@code {#!skresl:flag}...{/skresl}} blocks across all sheets.
  */
 public class ExcelTemplateRenderer implements TemplateRenderer {
 
-    private static final Pattern STRIKE_BLOCK = Pattern.compile("\\{#skresl:([\\p{L}0-9_]+)}(.*?)\\{/skresl}");
-    private static final Pattern STRIKE_MARKER = Pattern.compile("\\{#skresl:[\\p{L}0-9_]+}|\\{/skresl}");
+    private static final Pattern STRIKE_BLOCK = Pattern.compile("\\{#(!?)skresl:([\\p{L}0-9_]+)}(.*?)\\{/skresl}");
+    private static final Pattern STRIKE_MARKER = Pattern.compile("\\{#!?skresl:[\\p{L}0-9_]+}|\\{/skresl}");
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{([\\p{L}0-9_]+)}");
-    private static final int FLAG_GROUP = 1;
-    private static final int CONTENT_GROUP = 2;
+    private static final int NEGATED_GROUP = 1;
+    private static final int FLAG_GROUP = 2;
+    private static final int CONTENT_GROUP = 3;
     private static final int NAME_GROUP = 1;
 
     @Override
@@ -57,18 +58,20 @@ public class ExcelTemplateRenderer implements TemplateRenderer {
         StringBuilder sb = new StringBuilder(text);
         List<MatchResult> matches = STRIKE_BLOCK.matcher(sb).results().toList().reversed();
         for (MatchResult block : matches) {
+            String negated = block.group(NEGATED_GROUP);
             String flag = block.group(FLAG_GROUP);
             Boolean applies = data.resolveFlag(flag);
             if (applies == null) {
                 throw new TemplateException("Brak wartości pola wyboru '" + flag + "' dla bloku " + block.group());
             }
-            if (applies) {
-                // Keep content, remove markers
+            boolean shouldStrike = "!".equals(negated) ? !applies : applies;
+            if (shouldStrike) {
+                // Struck / not applicable - remove entire block
+                sb.replace(block.start(), block.end(), "");
+            } else {
+                // Not struck - keep content, remove markers
                 sb.replace(block.end(CONTENT_GROUP), block.end(), "");
                 sb.replace(block.start(), block.start(CONTENT_GROUP), "");
-            } else {
-                // Not applicable - remove entire block
-                sb.replace(block.start(), block.end(), "");
             }
         }
         STRIKE_MARKER.matcher(sb).results().findFirst().ifPresent(marker -> {

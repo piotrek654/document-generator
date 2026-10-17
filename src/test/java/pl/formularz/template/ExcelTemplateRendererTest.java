@@ -52,24 +52,27 @@ class ExcelTemplateRendererTest {
 
     @Test
     void fillsXlsxAndHandlesStrikeBlocks() throws IOException {
-        byte[] xlsxBytes = createXlsxWithText("Umowa: {numer_umowy}, Opcja: {#skresl:zgoda}Włączona{/skresl}");
+        byte[] xlsxBytes = createXlsxWithText(
+            "Umowa: {numer_umowy}, Opcja 1: {#skresl:zgoda}Skreślona gdy zaznaczona{/skresl}, Opcja 2: {#!skresl:zgoda}Skreślona gdy odznaczona{/skresl}");
 
-        // zgoda = true -> keep content, remove markers
+        // zgoda = true -> #skresl is struck (removed), #!skresl is kept
         ByteArrayOutputStream outTrue = new ByteArrayOutputStream();
         renderer.render(new ByteArrayInputStream(xlsxBytes),
             new TemplateData(Map.of("numer_umowy", "99/2026"), Map.of("zgoda", true)), outTrue);
 
         try (Workbook wb = WorkbookFactory.create(new ByteArrayInputStream(outTrue.toByteArray()))) {
-            assertThat(cellValue(wb.getSheetAt(0), 0, 0)).isEqualTo("Umowa: 99/2026, Opcja: Włączona");
+            assertThat(cellValue(wb.getSheetAt(0), 0, 0))
+                .isEqualTo("Umowa: 99/2026, Opcja 1: , Opcja 2: Skreślona gdy odznaczona");
         }
 
-        // zgoda = false -> remove block
+        // zgoda = false -> #skresl is kept, #!skresl is struck (removed)
         ByteArrayOutputStream outFalse = new ByteArrayOutputStream();
         renderer.render(new ByteArrayInputStream(xlsxBytes),
             new TemplateData(Map.of("numer_umowy", "99/2026"), Map.of("zgoda", false)), outFalse);
 
         try (Workbook wb = WorkbookFactory.create(new ByteArrayInputStream(outFalse.toByteArray()))) {
-            assertThat(cellValue(wb.getSheetAt(0), 0, 0)).isEqualTo("Umowa: 99/2026, Opcja: ");
+            assertThat(cellValue(wb.getSheetAt(0), 0, 0))
+                .isEqualTo("Umowa: 99/2026, Opcja 1: Skreślona gdy zaznaczona, Opcja 2: ");
         }
     }
 
@@ -95,6 +98,18 @@ class ExcelTemplateRendererTest {
             new ByteArrayOutputStream()))
             .isInstanceOf(TemplateException.class)
             .hasMessageContaining("{#skresl:flaga}");
+    }
+
+    @Test
+    void rejectsUnclosedNegatedStrikeBlockInCell() throws IOException {
+        byte[] xlsxBytes = createXlsxWithText("Test {#!skresl:flaga}Niezamknięty");
+
+        assertThatThrownBy(() -> renderer.render(
+            new ByteArrayInputStream(xlsxBytes),
+            new TemplateData(Map.of(), Map.of("flaga", true)),
+            new ByteArrayOutputStream()))
+            .isInstanceOf(TemplateException.class)
+            .hasMessageContaining("{#!skresl:flaga}");
     }
 
     private static byte[] createXlsxWithText(String text) throws IOException {

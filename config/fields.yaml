@@ -51,6 +51,9 @@ fields:
   - name: student_checkbox
     label: Student
     type: checkbox
-  - name: recista_checkbox
-    label: Ręcista
+  - name: 26lat_checkbox
+    label: Skończone 26 lat
+    type: checkbox
+  - name: legitymacja_checkbox
+    label: Ważna legitymacja
     type: checkbox
