@@ -69,6 +69,19 @@ class ParagraphTextTest {
         assertThat(paragraph.getRuns()).allMatch(XWPFRun::isBold);
     }
 
+    @Test
+    void unstrikesPreStruckRange() {
+        XWPFParagraph paragraph = paragraphOf("Ala ma ", "kota i ", "psa.");
+        for (XWPFRun run : paragraph.getRuns()) {
+            run.setStrikeThrough(true);
+        }
+
+        new ParagraphText(paragraph).unstrike(4, 11);
+
+        assertThat(String.join("", textOfRunsWhere(paragraph, r -> !r.isStrikeThrough()))).isEqualTo("ma kota");
+        assertThat(String.join("", textOfRunsWhere(paragraph, XWPFRun::isStrikeThrough))).isEqualTo("Ala  i psa.");
+    }
+
     private XWPFParagraph paragraphOf(String... runTexts) {
         XWPFParagraph paragraph = document.createParagraph();
         for (String runText : runTexts) {

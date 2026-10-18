@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -50,6 +52,29 @@ class LibreOfficePdfConverterTest {
             assertThat(new PDFTextStripper().getText(document))
                 .contains("Zażółć gęślą jaźń: sto dwadzieścia trzy złote czterdzieści pięć groszy");
         }
+    }
+
+    @Test
+    void convertsDocxWithStrikethroughToPdf() throws IOException {
+        Path docx = workDir.resolve("dokument-skreslenie.docx");
+        Path pdf = workDir.resolve("dokument-skreslenie.pdf");
+
+        try (XWPFDocument document = new XWPFDocument(); var output = Files.newOutputStream(docx)) {
+            XWPFParagraph p = document.createParagraph();
+            p.createRun().setText("Opcja A (nieaktywna): ");
+            XWPFRun struckRun = p.createRun();
+            struckRun.setText("wypłata w gotówce");
+            struckRun.setStrikeThrough(true);
+            p.createRun().setText(" / Opcja B: przelew bankowy.");
+            document.write(output);
+        }
+
+        converter.convert(docx, pdf);
+
+        PdfStrikeAnalyzer analyzer = PdfStrikeAnalyzer.analyze(pdf);
+        assertThat(analyzer.isPhraseStruck("wypłata w gotówce")).isTrue();
+        assertThat(analyzer.isPhraseUnstruck("Opcja A (nieaktywna):")).isTrue();
+        assertThat(analyzer.isPhraseUnstruck("Opcja B: przelew bankowy.")).isTrue();
     }
 
     private static void writeDocx(Path target, String text) throws IOException {

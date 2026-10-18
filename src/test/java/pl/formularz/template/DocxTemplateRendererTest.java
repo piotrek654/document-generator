@@ -155,6 +155,123 @@ class DocxTemplateRendererTest {
         assertThat(struckText(docMixed)).isEqualTo("Nie jestemmamnie posiadam");
     }
 
+    @Test
+    void removesStrikethroughWhenBlockEvaluatesToNotStruckEvenIfPreStruckInTemplate() throws IOException {
+        byte[] template;
+        try (XWPFDocument document = new XWPFDocument()) {
+            XWPFParagraph paragraph = document.createParagraph();
+            XWPFRun r1 = paragraph.createRun();
+            r1.setText("{#skresl:zgoda}Skreślone gdy prawda{/skresl}");
+            r1.setStrikeThrough(true);
+            XWPFRun rSpace = paragraph.createRun();
+            rSpace.setText(" ");
+            XWPFRun r2 = paragraph.createRun();
+            r2.setText("{#!skresl:zgoda}Nieskreślone gdy prawda{/skresl}");
+            r2.setStrikeThrough(true);
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            document.write(output);
+            template = output.toByteArray();
+        }
+
+        // zgoda = true -> #skresl struck, #!skresl UNSTRUCK (even though pre-struck in template)
+        XWPFDocument docTrue = render(template, new TemplateData(Map.of(), Map.of("zgoda", true)));
+        assertThat(struckText(docTrue)).isEqualTo("Skreślone gdy prawda");
+        assertThat(allText(docTrue)).isEqualTo("Skreślone gdy prawda Nieskreślone gdy prawda");
+
+        // zgoda = false -> #skresl UNSTRUCK, #!skresl STRUCK
+        XWPFDocument docFalse = render(template, new TemplateData(Map.of(), Map.of("zgoda", false)));
+        assertThat(struckText(docFalse)).isEqualTo("Nieskreślone gdy prawda");
+        assertThat(allText(docFalse)).isEqualTo("Skreślone gdy prawda Nieskreślone gdy prawda");
+    }
+
+    @Test
+    void rendersActualOswiadczenieTemplateWithCorrectStrikes() throws IOException {
+        java.nio.file.Path oswiadczeniePath = java.nio.file.Path.of("data/WZÓR oświadczenie do umów zlecenia 2026 wersja zaktualizowana.docx");
+        if (!java.nio.file.Files.exists(oswiadczeniePath)) {
+            return;
+        }
+
+        byte[] template = java.nio.file.Files.readAllBytes(oswiadczeniePath);
+        Map<String, String> values = Map.of(
+            "nazwisko", "Kowalski",
+            "imie", "Jan",
+            "data_urodzenia", "01-01-1990",
+            "miejsce_urodzenia", "Warszawa",
+            "pesel", "90010112345",
+            "adres_zameldowania", "ul. Główna 1, 00-001 Warszawa",
+            "adres_zamieszkania", "ul. Główna 1, 00-001 Warszawa",
+            "urzad_skarbowy", "US Warszawa",
+            "data_zawarcia_umowy", "17-10-2026"
+        );
+        TemplateData data = new TemplateData(
+            values,
+            Map.of(
+                "bezrobotny_checkbox", false,
+                "student_checkbox", false,
+                "26lat_checkbox", false,
+                "legitymacja_checkbox", false
+            )
+        );
+
+        XWPFDocument result = render(template, data);
+
+        // Find the paragraph with "studentem / uczniem"
+        XWPFParagraph studentParagraph = DocumentParagraphs.of(result).stream()
+            .filter(p -> p.getText().contains("studentem / uczniem"))
+            .findFirst()
+            .orElseThrow();
+
+        List<XWPFRun> runs = studentParagraph.getRuns();
+        String struckInParagraph = runs.stream()
+            .filter(XWPFRun::isStrikeThrough)
+            .map(XWPFRun::text)
+            .collect(Collectors.joining());
+
+        String unstruckInParagraph = runs.stream()
+            .filter(r -> !r.isStrikeThrough())
+            .map(XWPFRun::text)
+            .collect(Collectors.joining());
+
+        // When student_checkbox=false, 26lat_checkbox=false, legitymacja_checkbox=false:
+        // "Nie jestem" is UNSTRUCK, "jestem" is STRUCK
+        // "nie mam" is UNSTRUCK, "mam" is STRUCK
+        // "nie posiadam" is UNSTRUCK, "posiadam" is STRUCK
+        assertThat(struckInParagraph).contains("jestem").contains("mam").contains("posiadam");
+        assertThat(unstruckInParagraph).contains("Nie jestem").contains("nie mam").contains("nie posiadam");
+        assertThat(struckInParagraph).doesNotContain("Nie jestem");
+        assertThat(struckInParagraph).doesNotContain("nie mam");
+        assertThat(struckInParagraph).doesNotContain("nie posiadam");
+
+        // When all are true:
+        // "Nie jestem" is STRUCK, "jestem" is UNSTRUCK
+        TemplateData dataTrue = new TemplateData(
+            values,
+            Map.of(
+                "bezrobotny_checkbox", true,
+                "student_checkbox", true,
+                "26lat_checkbox", true,
+                "legitymacja_checkbox", true
+            )
+        );
+        XWPFDocument resultTrue = render(template, dataTrue);
+        XWPFParagraph studentParagraphTrue = DocumentParagraphs.of(resultTrue).stream()
+            .filter(p -> p.getText().contains("studentem / uczniem"))
+            .findFirst()
+            .orElseThrow();
+        List<XWPFRun> runsTrue = studentParagraphTrue.getRuns();
+        String struckInParagraphTrue = runsTrue.stream()
+            .filter(XWPFRun::isStrikeThrough)
+            .map(XWPFRun::text)
+            .collect(Collectors.joining());
+        String unstruckInParagraphTrue = runsTrue.stream()
+            .filter(r -> !r.isStrikeThrough())
+            .map(XWPFRun::text)
+            .collect(Collectors.joining());
+
+        assertThat(struckInParagraphTrue).isEqualTo("Nie jestemnie mamnie posiadam");
+        assertThat(unstruckInParagraphTrue).isEqualTo(" / jestem studentem / uczniem,  / mam skończonych 26 lat i  / posiadam ważną legitymację szkolną / studencką, której kopię dołączam do niniejszego oświadczenia ");
+    }
+
     private static TemplateData sampleData(boolean optionalParagraphApplies) {
         return new TemplateData(
             Map.of(

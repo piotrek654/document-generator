@@ -47,13 +47,33 @@ class ParagraphText {
 
     /** Strikes through characters [start, end), splitting runs at the range boundaries. */
     void strike(int start, int end) {
+        setStrike(start, end, true);
+    }
+
+    /** Removes strikethrough from characters [start, end), splitting runs at the range boundaries. */
+    void unstrike(int start, int end) {
+        setStrike(start, end, false);
+    }
+
+    private void setStrike(int start, int end, boolean strike) {
         splitAt(end);
         splitAt(start);
         int runStart = 0;
         for (XWPFRun run : paragraph.getRuns()) {
             int runEnd = runStart + run.text().length();
             if (runStart >= start && runEnd <= end && runEnd > runStart) {
-                run.setStrikeThrough(true);
+                CTRPr rpr = run.getCTR().getRPr();
+                if (rpr != null) {
+                    while (rpr.sizeOfStrikeArray() > 0) {
+                        rpr.removeStrike(0);
+                    }
+                    while (rpr.sizeOfDstrikeArray() > 0) {
+                        rpr.removeDstrike(0);
+                    }
+                }
+                if (strike) {
+                    run.setStrikeThrough(true);
+                }
             }
             runStart = runEnd;
         }

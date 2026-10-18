@@ -30,11 +30,24 @@ public class DocxTemplateRenderer implements TemplateRenderer {
     public void render(InputStream template, TemplateData data, OutputStream output) throws IOException {
         try (XWPFDocument document = new XWPFDocument(template)) {
             for (XWPFParagraph paragraph : DocumentParagraphs.of(document)) {
+                cleanParagraphRunProperties(paragraph);
                 ParagraphText text = new ParagraphText(paragraph);
                 applyStrikeBlocks(text, data);
                 replacePlaceholders(text, data);
             }
             document.write(output);
+        }
+    }
+
+    private static void cleanParagraphRunProperties(XWPFParagraph paragraph) {
+        if (paragraph.getCTP().getPPr() != null && paragraph.getCTP().getPPr().getRPr() != null) {
+            var prRpr = paragraph.getCTP().getPPr().getRPr();
+            while (prRpr.sizeOfStrikeArray() > 0) {
+                prRpr.removeStrike(0);
+            }
+            while (prRpr.sizeOfDstrikeArray() > 0) {
+                prRpr.removeDstrike(0);
+            }
         }
     }
 
@@ -50,6 +63,8 @@ public class DocxTemplateRenderer implements TemplateRenderer {
             boolean shouldStrike = "!".equals(negated) ? !applies : applies;
             if (shouldStrike) {
                 text.strike(block.start(CONTENT_GROUP), block.end(CONTENT_GROUP));
+            } else {
+                text.unstrike(block.start(CONTENT_GROUP), block.end(CONTENT_GROUP));
             }
             text.replace(block.end(CONTENT_GROUP), block.end(), "");
             text.replace(block.start(), block.start(CONTENT_GROUP), "");
