@@ -52,8 +52,26 @@ fields:
     label: Student
     type: checkbox
   - name: 26lat_checkbox
-    label: Skończone 26 lat
+    label: Poniżej 26 lat
     type: checkbox
-  - name: legitymacja_checkbox
+  - name: legitymacja_studencka2332_checkbox
     label: Ważna legitymacja
+    type: checkbox
+  - name: zatrudniony_checkbox
+    label: Zatrudniony gdzie indziej ...
+    type: checkbox
+  - name: zatrudniony_uop_checkbox
+    label: ... na UoP
+    type: checkbox
+  - name: zatrudniony_zlecenie_checkbox
+    label: ... na zlecenie
+    type: checkbox
+  - name: podstawa_wymiaru_skladek_1_checkbox
+    label: Podstawa wymiaru składek na ubezpieczenie społeczne emerytalne i rentowe jest równa lub wyższa od płacy minimalnej ...
+    type: checkbox
+  - name: podstawa_wymiaru_skladek_2_checkbox
+    label: ... i niższa kwocie wynagrodzenia
+    type: checkbox
+  - name: podstawa_wymiaru_skladek_3_checkbox
+    label: ... i równa lub wyższa kwocie wynagrodzenia
     type: checkbox
