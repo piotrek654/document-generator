@@ -47,9 +47,14 @@ fields:
     label: Urząd skarbowy
     type: text
   - name: bezrobotny_checkbox
-    label: Bezrobotny
+    label: Bezrobotny ...
     type: checkbox
     default: false
+  - name: urzad_pracy
+    label: ... zarejestrowany w rejonowym urzędzie pracy
+    type: text
+    enabled_if: "bezrobotny_checkbox"
+    disabled_value: ""
   - name: student_checkbox
     label: Uczeń / Student ...
     type: checkbox
@@ -70,17 +75,27 @@ fields:
     type: checkbox
     default: false
   - name: zatrudniony_uop_checkbox
-    label: ... na UoP
+    label: ... na UoP ...
     type: checkbox
     default: false
     enabled_if: "zatrudniony_checkbox"
     disabled_value: false
+  - name: zatrudniony_nazwa_firmy_uop
+    label: ... w firmie
+    type: text
+    enabled_if: "zatrudniony_uop_checkbox"
+    disabled_value: ""
   - name: zatrudniony_zlecenie_checkbox
-    label: ... na zlecenie
+    label: ... na zlecenie ...
     type: checkbox
     default: false
     enabled_if: "zatrudniony_checkbox"
     disabled_value: false
+  - name: zatrudniony_nazwa_firmy_zlecenie
+    label: ... w firmie
+    type: text
+    enabled_if: "zatrudniony_zlecenie_checkbox"
+    disabled_value: ""
   - name: podstawa_wymiaru_skladek_1_checkbox
     label: Podstawa wymiaru składek na ubezpieczenie społeczne emerytalne i rentowe jest równa lub wyższa od płacy minimalnej ...
     type: checkbox
@@ -97,4 +112,18 @@ fields:
     type: checkbox
     default: false
     enabled_if: "podstawa_wymiaru_skladek_1_checkbox"
+    disabled_value: false
+  - name: dzialalnosc_checkbox
+    label: Prowadzi działalność ...
+    type: checkbox
+    default: false
+  - name: dzialalnosc_rolnicza_checkbox
+    label: ... rolniczą
+    type: checkbox
+    enabled_if: "dzialalnosc_checkbox"
+    disabled_value: false
+  - name: dzialalnosc_pozarolnicza_checkbox
+    label: ... pozarolniczą
+    type: checkbox
+    enabled_if: "dzialalnosc_checkbox"
     disabled_value: false
