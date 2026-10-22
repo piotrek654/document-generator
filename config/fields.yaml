@@ -51,16 +51,16 @@ fields:
     type: checkbox
     default: false
   - name: student_checkbox
-    label: Uczeń / Student
+    label: Uczeń / Student ...
     type: checkbox
     default: false
   - name: 26lat_checkbox
-    label: Poniżej 26 lat
+    label: ... ma 26 lat lub mniej
     type: checkbox
     enabled_if: "student_checkbox"
     default: false
   - name: legitymacja_studencka_checkbox
-    label: Ważna legitymacja
+    label: ... ma ważną legitymację
     type: checkbox
     default: false
     enabled_if: "student_checkbox"

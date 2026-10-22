@@ -22,7 +22,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
@@ -54,8 +53,8 @@ public class FormApp extends Application {
     private static final Path OUTPUT_PDF = Path.of("output/dokumenty.pdf");
     private static final double GAP = 8;
     private static final double PADDING = 16;
+    private static final double LABEL_WIDTH = 300;
     private static final double INPUT_WIDTH = 560;
-    private static final int AMOUNT_IN_WORDS_ROWS = 2;
     private static final double MAX_SCREEN_HEIGHT_SHARE = 0.85;
 
     private final Map<String, Supplier<Object>> readers = new LinkedHashMap<>();
@@ -77,15 +76,18 @@ public class FormApp extends Application {
         grid.setHgap(GAP);
         grid.setVgap(GAP);
         grid.setPadding(new Insets(PADDING));
+        ColumnConstraints labelColumn = new ColumnConstraints(LABEL_WIDTH, LABEL_WIDTH, LABEL_WIDTH);
+        labelColumn.setHgrow(Priority.NEVER);
         ColumnConstraints inputColumn = new ColumnConstraints(INPUT_WIDTH, INPUT_WIDTH, Double.MAX_VALUE);
         inputColumn.setHgrow(Priority.ALWAYS);
         inputColumn.setFillWidth(true);
-        grid.getColumnConstraints().addAll(new ColumnConstraints(), inputColumn);
+        grid.getColumnConstraints().addAll(labelColumn, inputColumn);
 
         int row = 0;
         for (FieldDefinition field : catalog.fields()) {
             Label label = new Label(field.label());
-            label.setMinWidth(Region.USE_PREF_SIZE);
+            label.setWrapText(true);
+            label.setMaxWidth(Double.MAX_VALUE);
             fieldLabels.put(field.name(), label);
             grid.addRow(row++, label, inputFor(field));
         }
@@ -321,14 +323,13 @@ public class FormApp extends Application {
     }
 
     /** Read-only preview refreshed while the source amount is typed; the value itself is computed by FormValues. */
-    private TextArea amountInWordsPreview(FieldDefinition.AmountInWords words) {
-        TextArea preview = new TextArea();
+    private TextField amountInWordsPreview(FieldDefinition.AmountInWords words) {
+        TextField preview = new TextField();
         preview.setEditable(false);
-        preview.setFocusTraversable(false);
-        preview.setWrapText(true);
-        preview.setPrefRowCount(AMOUNT_IN_WORDS_ROWS);
+        preview.setDisable(true);
         TextField source = amountInputs.get(words.source());
         if (source != null) {
+            preview.setText(spell(source.getText()));
             source.textProperty().addListener((observable, previous, current) -> preview.setText(spell(current)));
         }
         return preview;

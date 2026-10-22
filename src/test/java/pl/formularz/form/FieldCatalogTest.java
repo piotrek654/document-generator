@@ -54,19 +54,19 @@ class FieldCatalogTest {
     void loadsMainConfigWithDependenciesAndDefaults() {
         FieldCatalog catalog = FieldCatalog.load(MAIN_CONFIG_PATH);
 
-        FieldDefinition urzad = catalog.fields().stream()
-            .filter(f -> f.name().equals("urzad_skarbowy"))
-            .findFirst()
-            .orElseThrow();
-        assertThat(urzad.enabledIf()).contains("!bezrobotny_checkbox");
-        assertThat(urzad.disabledValue()).contains("-");
-
         FieldDefinition legitymacja = catalog.fields().stream()
             .filter(f -> f.name().equals("legitymacja_studencka_checkbox"))
             .findFirst()
             .orElseThrow();
         assertThat(legitymacja.enabledIf()).contains("student_checkbox");
         assertThat(legitymacja.disabledValue()).contains(false);
+
+        FieldDefinition podstawa2 = catalog.fields().stream()
+            .filter(f -> f.name().equals("podstawa_wymiaru_skladek_2_checkbox"))
+            .findFirst()
+            .orElseThrow();
+        assertThat(podstawa2.enabledIf()).contains("podstawa_wymiaru_skladek_1_checkbox");
+        assertThat(podstawa2.disabledValue()).contains(false);
     }
 
     @Test
