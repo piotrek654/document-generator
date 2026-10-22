@@ -38,14 +38,56 @@ public final class FormValues {
         Map<String, Amount> amounts = new HashMap<>();
         List<String> problems = new ArrayList<>();
         List<String> problemFields = new ArrayList<>();
+        Map<String, Boolean> resolvedCheckboxStates = new HashMap<>();
 
         for (FieldDefinition field : catalog.fields()) {
+            boolean isEnabled = field.enabledIf()
+                .map(cond -> ConditionEvaluator.isEnabled(cond, resolvedCheckboxStates))
+                .orElse(true);
+
+            if (!isEnabled) {
+                Object disabledVal = field.disabledValue().orElse(null);
+                if (field instanceof FieldDefinition.Checkbox cb) {
+                    boolean val = disabledVal instanceof Boolean b
+                        ? b
+                        : (disabledVal != null && Boolean.parseBoolean(disabledVal.toString()));
+                    flags.put(cb.name(), val);
+                    resolvedCheckboxStates.put(cb.name(), val);
+                } else if (field instanceof FieldDefinition.Amount amountField) {
+                    if (disabledVal != null && !disabledVal.toString().isBlank()) {
+                        try {
+                            Amount amount = Amount.parse(disabledVal.toString());
+                            amounts.put(amountField.name(), amount);
+                            texts.put(amountField.name(), amount.formatPl());
+                        } catch (IllegalArgumentException e) {
+                            texts.put(amountField.name(), disabledVal.toString());
+                        }
+                    } else {
+                        texts.put(amountField.name(), "");
+                    }
+                } else if (field instanceof FieldDefinition.Date dateField) {
+                    if (disabledVal != null && !disabledVal.toString().isBlank()) {
+                        texts.put(dateField.name(), disabledVal.toString());
+                    } else {
+                        texts.put(dateField.name(), "");
+                    }
+                } else if (field instanceof FieldDefinition.AmountInWords) {
+                    // computed below
+                } else {
+                    texts.put(field.name(), disabledVal != null ? disabledVal.toString() : "");
+                }
+                continue;
+            }
+
             switch (field) {
                 case FieldDefinition.Text text ->
                     required(text, problems, problemFields).ifPresent(v -> texts.put(text.name(), v));
                 case FieldDefinition.Date dateField ->
                     required(dateField, problems, problemFields).ifPresent(value -> {
                         Object raw = input.get(dateField.name());
+                        if (raw == null && dateField.defaultValue().isPresent()) {
+                            raw = dateField.defaultValue().get();
+                        }
                         if (raw instanceof LocalDate ld) {
                             texts.put(dateField.name(), ld.format(DATE_FORMATTER));
                         } else {
@@ -78,24 +120,44 @@ public final class FormValues {
                             problemFields.add(amountField.name());
                         }
                     });
-                case FieldDefinition.Checkbox checkbox ->
-                    flags.put(checkbox.name(), Boolean.TRUE.equals(input.get(checkbox.name())));
+                case FieldDefinition.Checkbox checkbox -> {
+                    Object raw = input.get(checkbox.name());
+                    boolean val;
+                    if (raw == null && checkbox.defaultValue().isPresent()) {
+                        Object def = checkbox.defaultValue().get();
+                        val = def instanceof Boolean b ? b : Boolean.parseBoolean(def.toString());
+                    } else {
+                        val = Boolean.TRUE.equals(raw);
+                    }
+                    flags.put(checkbox.name(), val);
+                    resolvedCheckboxStates.put(checkbox.name(), val);
+                }
                 case FieldDefinition.AmountInWords ignored -> {
                     // computed below, once all source amounts are known
                 }
             }
         }
+
         for (FieldDefinition field : catalog.fields()) {
-            if (field instanceof FieldDefinition.AmountInWords words && amounts.containsKey(words.source())) {
-                texts.put(words.name(), amounts.get(words.source()).inWords());
+            if (field instanceof FieldDefinition.AmountInWords words) {
+                if (amounts.containsKey(words.source())) {
+                    texts.put(words.name(), amounts.get(words.source()).inWords());
+                } else if (!texts.containsKey(words.name())) {
+                    texts.put(words.name(), "");
+                }
             }
         }
-        if (texts.containsKey("data_rozpoczecia_umowy")) {
-            LocalDate startDate = parseDate(texts.get("data_rozpoczecia_umowy"));
-            LocalDate endDate = LocalDate.of(startDate.getYear(), 12, 31);
-            texts.put("data_zakonczenia_umowy", endDate.format(DATE_FORMATTER));
-            texts.put("rok", String.valueOf(startDate.getYear()));
+
+        if (texts.containsKey("data_rozpoczecia_umowy") && !texts.get("data_rozpoczecia_umowy").isBlank()) {
+            try {
+                LocalDate startDate = parseDate(texts.get("data_rozpoczecia_umowy"));
+                LocalDate endDate = LocalDate.of(startDate.getYear(), 12, 31);
+                texts.put("data_zakonczenia_umowy", endDate.format(DATE_FORMATTER));
+                texts.put("rok", String.valueOf(startDate.getYear()));
+            } catch (Exception ignored) {
+            }
         }
+
         if (!problems.isEmpty()) {
             throw new FormException(problems, problemFields);
         }
@@ -118,6 +180,9 @@ public final class FormValues {
 
     private Optional<String> required(FieldDefinition field, List<String> problems, List<String> problemFields) {
         Object value = input.get(field.name());
+        if (value == null && field.defaultValue().isPresent()) {
+            value = field.defaultValue().get();
+        }
         if (value == null) {
             problems.add("Pole „" + field.label() + "” jest wymagane.");
             problemFields.add(field.name());

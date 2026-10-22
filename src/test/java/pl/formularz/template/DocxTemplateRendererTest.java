@@ -205,11 +205,17 @@ class DocxTemplateRendererTest {
         );
         TemplateData data = new TemplateData(
             values,
-            Map.of(
-                "bezrobotny_checkbox", false,
-                "student_checkbox", false,
-                "26lat_checkbox", false,
-                "legitymacja_checkbox", false
+            Map.ofEntries(
+                Map.entry("bezrobotny_checkbox", false),
+                Map.entry("student_checkbox", false),
+                Map.entry("26lat_checkbox", false),
+                Map.entry("legitymacja_studencka_checkbox", false),
+                Map.entry("zatrudniony_checkbox", false),
+                Map.entry("zatrudniony_uop_checkbox", false),
+                Map.entry("zatrudniony_zlecenie_checkbox", false),
+                Map.entry("podstawa_wymiaru_skladek_1_checkbox", false),
+                Map.entry("podstawa_wymiaru_skladek_2_checkbox", false),
+                Map.entry("podstawa_wymiaru_skladek_3_checkbox", false)
             )
         );
 
@@ -232,25 +238,30 @@ class DocxTemplateRendererTest {
             .map(XWPFRun::text)
             .collect(Collectors.joining());
 
-        // When student_checkbox=false, 26lat_checkbox=false, legitymacja_checkbox=false:
+        // When student_checkbox=false, 26lat_checkbox=false, legitymacja_studencka_checkbox=false:
         // "Nie jestem" is UNSTRUCK, "jestem" is STRUCK
-        // "nie mam" is UNSTRUCK, "mam" is STRUCK
+        // "mam" is UNSTRUCK, "nie mam" is STRUCK
         // "nie posiadam" is UNSTRUCK, "posiadam" is STRUCK
-        assertThat(struckInParagraph).contains("jestem").contains("mam").contains("posiadam");
-        assertThat(unstruckInParagraph).contains("Nie jestem").contains("nie mam").contains("nie posiadam");
-        assertThat(struckInParagraph).doesNotContain("Nie jestem");
-        assertThat(struckInParagraph).doesNotContain("nie mam");
-        assertThat(struckInParagraph).doesNotContain("nie posiadam");
+        assertThat(struckInParagraph).isEqualTo("jestemnie mamposiadam");
+        assertThat(unstruckInParagraph).contains("Nie jestem").contains("mam").contains("nie posiadam");
 
         // When all are true:
         // "Nie jestem" is STRUCK, "jestem" is UNSTRUCK
+        // "mam" is STRUCK, "nie mam" is UNSTRUCK
+        // "nie posiadam" is STRUCK, "posiadam" is UNSTRUCK
         TemplateData dataTrue = new TemplateData(
             values,
-            Map.of(
-                "bezrobotny_checkbox", true,
-                "student_checkbox", true,
-                "26lat_checkbox", true,
-                "legitymacja_checkbox", true
+            Map.ofEntries(
+                Map.entry("bezrobotny_checkbox", true),
+                Map.entry("student_checkbox", true),
+                Map.entry("26lat_checkbox", true),
+                Map.entry("legitymacja_studencka_checkbox", true),
+                Map.entry("zatrudniony_checkbox", true),
+                Map.entry("zatrudniony_uop_checkbox", true),
+                Map.entry("zatrudniony_zlecenie_checkbox", true),
+                Map.entry("podstawa_wymiaru_skladek_1_checkbox", true),
+                Map.entry("podstawa_wymiaru_skladek_2_checkbox", true),
+                Map.entry("podstawa_wymiaru_skladek_3_checkbox", true)
             )
         );
         XWPFDocument resultTrue = render(template, dataTrue);
@@ -268,8 +279,8 @@ class DocxTemplateRendererTest {
             .map(XWPFRun::text)
             .collect(Collectors.joining());
 
-        assertThat(struckInParagraphTrue).isEqualTo("Nie jestemnie mamnie posiadam");
-        assertThat(unstruckInParagraphTrue).isEqualTo(" / jestem studentem / uczniem,  / mam skończonych 26 lat i  / posiadam ważną legitymację szkolną / studencką, której kopię dołączam do niniejszego oświadczenia ");
+        assertThat(struckInParagraphTrue).isEqualTo("Nie jestemmamnie posiadam");
+        assertThat(unstruckInParagraphTrue).isEqualTo(" / jestem studentem / uczniem, nie mam /  skończonych 26 lat i  / posiadam ważną legitymację szkolną / studencką, której kopię dołączam do niniejszego oświadczenia ");
     }
 
     private static TemplateData sampleData(boolean optionalParagraphApplies) {

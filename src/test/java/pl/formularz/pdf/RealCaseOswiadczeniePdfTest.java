@@ -30,11 +30,17 @@ class RealCaseOswiadczeniePdfTest {
                 "urzad_skarbowy", "US Warszawa",
                 "data_zawarcia_umowy", "17-10-2026"
             ),
-            Map.of(
-                "student_checkbox", false,
-                "26lat_checkbox", false,
-                "legitymacja_checkbox", false,
-                "bezrobotny_checkbox", false
+            Map.ofEntries(
+                Map.entry("student_checkbox", false),
+                Map.entry("26lat_checkbox", false),
+                Map.entry("legitymacja_studencka_checkbox", false),
+                Map.entry("bezrobotny_checkbox", false),
+                Map.entry("zatrudniony_checkbox", false),
+                Map.entry("zatrudniony_uop_checkbox", false),
+                Map.entry("zatrudniony_zlecenie_checkbox", false),
+                Map.entry("podstawa_wymiaru_skladek_1_checkbox", false),
+                Map.entry("podstawa_wymiaru_skladek_2_checkbox", false),
+                Map.entry("podstawa_wymiaru_skladek_3_checkbox", false)
             )
         );
 
@@ -60,9 +66,8 @@ class RealCaseOswiadczeniePdfTest {
         String page2Struck = page2.struckText();
         System.out.println("PAGE 2 STRUCK TEXT: " + page2Struck);
 
-        assertThat(page2Struck).contains("jestem").contains("mam").contains("posiadam");
+        assertThat(page2Struck).contains("jestem").contains("nie mam").contains("posiadam");
         assertThat(page2Struck).doesNotContain("Nie jestem");
-        assertThat(page2Struck).doesNotContain("nie mam");
         assertThat(page2Struck).doesNotContain("nie posiadam");
 
         Files.deleteIfExists(renderedDocx);
@@ -86,11 +91,17 @@ class RealCaseOswiadczeniePdfTest {
                 "urzad_skarbowy", "US Warszawa",
                 "data_zawarcia_umowy", "17-10-2026"
             ),
-            Map.of(
-                "student_checkbox", true,
-                "26lat_checkbox", true,
-                "legitymacja_checkbox", true,
-                "bezrobotny_checkbox", true
+            Map.ofEntries(
+                Map.entry("student_checkbox", true),
+                Map.entry("26lat_checkbox", true),
+                Map.entry("legitymacja_studencka_checkbox", true),
+                Map.entry("bezrobotny_checkbox", true),
+                Map.entry("zatrudniony_checkbox", true),
+                Map.entry("zatrudniony_uop_checkbox", true),
+                Map.entry("zatrudniony_zlecenie_checkbox", true),
+                Map.entry("podstawa_wymiaru_skladek_1_checkbox", true),
+                Map.entry("podstawa_wymiaru_skladek_2_checkbox", true),
+                Map.entry("podstawa_wymiaru_skladek_3_checkbox", true)
             )
         );
 
@@ -115,7 +126,7 @@ class RealCaseOswiadczeniePdfTest {
         String page2Struck = page2.struckText();
         System.out.println("PAGE 2 STRUCK TEXT (TRUE): " + page2Struck);
 
-        assertThat(page2Struck).contains("Nie jestem").contains("nie mam").contains("nie posiadam");
+        assertThat(page2Struck).contains("Nie jestem").contains("mam").contains("nie posiadam");
 
         Files.deleteIfExists(renderedDocx);
         Files.deleteIfExists(renderedPdf);

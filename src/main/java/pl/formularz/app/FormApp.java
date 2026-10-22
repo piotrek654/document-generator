@@ -2,11 +2,14 @@ package pl.formularz.app;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import javafx.application.Application;
+import javafx.beans.binding.BooleanBinding;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,10 +33,9 @@ import javafx.scene.layout.Region;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 import pl.formularz.amount.Amount;
+import pl.formularz.form.ConditionEvaluator;
 import pl.formularz.form.FieldCatalog;
 import pl.formularz.form.FieldDefinition;
 import pl.formularz.form.FormException;
@@ -59,6 +61,8 @@ public class FormApp extends Application {
     private final Map<String, Supplier<Object>> readers = new LinkedHashMap<>();
     private final Map<String, TextField> amountInputs = new LinkedHashMap<>();
     private final Map<String, Node> fieldControls = new LinkedHashMap<>();
+    private final Map<String, Label> fieldLabels = new LinkedHashMap<>();
+    private final Map<String, CheckBox> checkBoxes = new LinkedHashMap<>();
     private FieldCatalog catalog;
     private LibreOfficePdfConverter converter;
 
@@ -82,8 +86,11 @@ public class FormApp extends Application {
         for (FieldDefinition field : catalog.fields()) {
             Label label = new Label(field.label());
             label.setMinWidth(Region.USE_PREF_SIZE);
+            fieldLabels.put(field.name(), label);
             grid.addRow(row++, label, inputFor(field));
         }
+
+        setupDependencies();
 
         ScrollPane scroll = new ScrollPane(grid);
         scroll.setFitToWidth(true);
@@ -96,6 +103,89 @@ public class FormApp extends Application {
         stage.setScene(new Scene(root));
         stage.show();
         fitToScreen(stage);
+    }
+
+    private void setupDependencies() {
+        for (FieldDefinition field : catalog.fields()) {
+            field.enabledIf().ifPresent(condition -> {
+                Node control = fieldControls.get(field.name());
+                Label label = fieldLabels.get(field.name());
+
+                boolean negate = ConditionEvaluator.isNegated(condition);
+                String sourceName = ConditionEvaluator.getSourceCheckbox(condition);
+                CheckBox sourceCheckbox = checkBoxes.get(sourceName);
+                if (sourceCheckbox != null && control != null) {
+                    javafx.beans.value.ObservableValue<Boolean> disabledBinding = negate
+                        ? sourceCheckbox.selectedProperty()
+                        : sourceCheckbox.selectedProperty().not();
+
+                    control.disableProperty().bind(disabledBinding);
+                    if (label != null) {
+                        label.disableProperty().bind(disabledBinding);
+                    }
+
+                    if (Boolean.TRUE.equals(disabledBinding.getValue())) {
+                        applyDisabledValue(field, control);
+                    }
+
+                    disabledBinding.addListener((obs, wasDisabled, isDisabled) -> {
+                        if (Boolean.TRUE.equals(isDisabled)) {
+                            applyDisabledValue(field, control);
+                            control.setStyle("");
+                        } else {
+                            applyEnabledValue(field, control);
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    private void applyDisabledValue(FieldDefinition field, Node control) {
+        Object def = field.disabledValue().orElse(null);
+        switch (control) {
+            case TextField tf -> tf.setText(def != null ? def.toString() : "");
+            case CheckBox cb -> cb.setSelected(def instanceof Boolean b ? b : (def != null && Boolean.parseBoolean(def.toString())));
+            case DatePicker dp -> {
+                if (def != null && !def.toString().isBlank()) {
+                    try {
+                        dp.setValue(LocalDate.parse(def.toString()));
+                    } catch (Exception e) {
+                        dp.getEditor().setText(def.toString());
+                    }
+                } else {
+                    dp.setValue(null);
+                    dp.getEditor().setText("");
+                }
+            }
+            case ComboBox<?> combo -> {
+                @SuppressWarnings("unchecked")
+                ComboBox<String> cb = (ComboBox<String>) combo;
+                cb.setValue(def != null ? def.toString() : null);
+            }
+            default -> {}
+        }
+    }
+
+    private void applyEnabledValue(FieldDefinition field, Node control) {
+        field.defaultValue().ifPresent(def -> {
+            switch (control) {
+                case TextField tf -> {
+                    if (tf.getText().isEmpty()) {
+                        tf.setText(def.toString());
+                    }
+                }
+                case CheckBox cb -> cb.setSelected(def instanceof Boolean b ? b : Boolean.parseBoolean(def.toString()));
+                case ComboBox<?> combo -> {
+                    @SuppressWarnings("unchecked")
+                    ComboBox<String> cb = (ComboBox<String>) combo;
+                    if (cb.getValue() == null) {
+                        cb.setValue(def.toString());
+                    }
+                }
+                default -> {}
+            }
+        });
     }
 
     /** Kept outside the scroll pane, so the button stays visible however long the form is. */
@@ -126,10 +216,18 @@ public class FormApp extends Application {
 
     private Node inputFor(FieldDefinition field) {
         Node control = switch (field) {
-            case FieldDefinition.Text text -> textInput(text.name());
-            case FieldDefinition.Date date -> dateInput(date.name());
+            case FieldDefinition.Text text -> {
+                TextField input = textInput(text.name());
+                field.defaultValue().ifPresent(def -> input.setText(def.toString()));
+                yield input;
+            }
+            case FieldDefinition.Date date -> {
+                DatePicker input = dateInput(date.name(), field.defaultValue().orElse(null));
+                yield input;
+            }
             case FieldDefinition.Amount amount -> {
                 TextField input = textInput(amount.name());
+                field.defaultValue().ifPresent(def -> input.setText(def.toString()));
                 amountInputs.put(amount.name(), input);
                 yield input;
             }
@@ -137,12 +235,18 @@ public class FormApp extends Application {
                 ComboBox<String> input = new ComboBox<>();
                 input.getItems().setAll(select.options());
                 input.setMaxWidth(Double.MAX_VALUE);
+                field.defaultValue().ifPresent(def -> input.setValue(def.toString()));
                 input.valueProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
                 readers.put(select.name(), input::getValue);
                 yield input;
             }
             case FieldDefinition.Checkbox checkbox -> {
                 CheckBox input = new CheckBox();
+                boolean defVal = field.defaultValue()
+                    .map(v -> v instanceof Boolean b ? b : Boolean.parseBoolean(v.toString()))
+                    .orElse(false);
+                input.setSelected(defVal);
+                checkBoxes.put(checkbox.name(), input);
                 readers.put(checkbox.name(), input::isSelected);
                 yield input;
             }
@@ -152,8 +256,19 @@ public class FormApp extends Application {
         return control;
     }
 
-    private DatePicker dateInput(String name) {
-        DatePicker input = new DatePicker(LocalDate.now());
+    private DatePicker dateInput(String name, Object defaultValue) {
+        LocalDate initialDate = LocalDate.now();
+        if (defaultValue != null) {
+            if (defaultValue instanceof LocalDate ld) {
+                initialDate = ld;
+            } else {
+                try {
+                    initialDate = LocalDate.parse(defaultValue.toString());
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        DatePicker input = new DatePicker(initialDate);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         input.setConverter(new StringConverter<>() {
             @Override

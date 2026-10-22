@@ -38,6 +38,7 @@ fields:
     label: Jednostka
     type: select
     options: [pełen miesięczny zakres, godzinę]
+    default: "pełen miesięczny zakres"
   - name: kwota_slownie
     label: Kwota słownie
     type: amount_in_words
@@ -48,30 +49,52 @@ fields:
   - name: bezrobotny_checkbox
     label: Bezrobotny
     type: checkbox
+    default: false
   - name: student_checkbox
-    label: Student
+    label: Uczeń / Student
     type: checkbox
+    default: false
   - name: 26lat_checkbox
     label: Poniżej 26 lat
     type: checkbox
-  - name: legitymacja_studencka2332_checkbox
+    enabled_if: "student_checkbox"
+    default: false
+  - name: legitymacja_studencka_checkbox
     label: Ważna legitymacja
     type: checkbox
+    default: false
+    enabled_if: "student_checkbox"
+    disabled_value: false
   - name: zatrudniony_checkbox
     label: Zatrudniony gdzie indziej ...
     type: checkbox
+    default: false
   - name: zatrudniony_uop_checkbox
     label: ... na UoP
     type: checkbox
+    default: false
+    enabled_if: "zatrudniony_checkbox"
+    disabled_value: false
   - name: zatrudniony_zlecenie_checkbox
     label: ... na zlecenie
     type: checkbox
+    default: false
+    enabled_if: "zatrudniony_checkbox"
+    disabled_value: false
   - name: podstawa_wymiaru_skladek_1_checkbox
     label: Podstawa wymiaru składek na ubezpieczenie społeczne emerytalne i rentowe jest równa lub wyższa od płacy minimalnej ...
     type: checkbox
+    default: false
+    disabled_value: false
   - name: podstawa_wymiaru_skladek_2_checkbox
     label: ... i niższa kwocie wynagrodzenia
     type: checkbox
+    default: false
+    enabled_if: "podstawa_wymiaru_skladek_1_checkbox"
+    disabled_value: false
   - name: podstawa_wymiaru_skladek_3_checkbox
     label: ... i równa lub wyższa kwocie wynagrodzenia
     type: checkbox
+    default: false
+    enabled_if: "podstawa_wymiaru_skladek_1_checkbox"
+    disabled_value: false

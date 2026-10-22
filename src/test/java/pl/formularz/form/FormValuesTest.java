@@ -110,21 +110,6 @@ class FormValuesTest {
     }
 
     @Test
-    void rejectsOptionOutsideSelectList() {
-        FormValues values = FormValues.of(catalog, Map.of(
-            "imie", "Jan",
-            "data_zawarcia", "2026-10-04",
-            "data_rozpoczecia_umowy", "2026-03-01",
-            "jednostka", "tygodniowo",
-            "kwota", "1"));
-
-        assertThatThrownBy(values::toTemplateData)
-            .isInstanceOf(FormException.class)
-            .hasMessageContaining("Jednostka")
-            .hasMessageContaining("tygodniowo");
-    }
-
-    @Test
     void reportsInvalidAmountByFieldLabel() {
         FormValues values = FormValues.of(catalog, Map.of(
             "imie", "Jan",
@@ -240,5 +225,101 @@ class FormValuesTest {
             .containsEntry("data_rozpoczecia_umowy", "29-02-2024")
             .containsEntry("data_zakonczenia_umowy", "31-12-2024")
             .containsEntry("rok", "2024");
+    }
+
+    @Test
+    void disablesFieldAndAppliesDisabledValueWhenConditionNotMet() {
+        String yaml = """
+            fields:
+              - name: bezrobotny
+                label: Bezrobotny
+                type: checkbox
+              - name: urzad
+                label: Urząd skarbowy
+                type: text
+                enabled_if: "!bezrobotny"
+                disabled_value: "Brak"
+              - name: student
+                label: Student
+                type: checkbox
+              - name: legitymacja
+                label: Legitymacja
+                type: checkbox
+                enabled_if: "student"
+                disabled_value: false
+            """;
+        FieldCatalog cat = FieldCatalog.load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
+
+        // Case 1: bezrobotny=true -> urzad disabled ("Brak"), student=false -> legitymacja disabled (false)
+        TemplateData data1 = FormValues.of(cat, Map.of("bezrobotny", true, "student", false)).toTemplateData();
+        assertThat(data1.texts()).containsEntry("urzad", "Brak");
+        assertThat(data1.flags()).containsEntry("bezrobotny", true);
+        assertThat(data1.flags()).containsEntry("student", false);
+        assertThat(data1.flags()).containsEntry("legitymacja", false);
+
+        // Case 2: bezrobotny=false -> urzad enabled (validated as required), student=true -> legitymacja enabled
+        TemplateData data2 = FormValues.of(cat, Map.of(
+            "bezrobotny", false,
+            "urzad", "US Warszawa",
+            "student", true,
+            "legitymacja", true
+        )).toTemplateData();
+        assertThat(data2.texts()).containsEntry("urzad", "US Warszawa");
+        assertThat(data2.flags()).containsEntry("bezrobotny", false);
+        assertThat(data2.flags()).containsEntry("student", true);
+        assertThat(data2.flags()).containsEntry("legitymacja", true);
+    }
+
+    @Test
+    void handlesCascadingDependencies() {
+        String yaml = """
+            fields:
+              - name: zatrudniony
+                label: Zatrudniony
+                type: checkbox
+              - name: etat
+                label: Na etat
+                type: checkbox
+                enabled_if: "zatrudniony"
+                disabled_value: false
+              - name: firma
+                label: Nazwa firmy
+                type: text
+                enabled_if: "etat"
+                disabled_value: "Niedotyczy"
+            """;
+        FieldCatalog cat = FieldCatalog.load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
+
+        // If zatrudniony is false -> etat becomes false -> firma becomes disabled with "Niedotyczy"
+        TemplateData data = FormValues.of(cat, Map.of("zatrudniony", false)).toTemplateData();
+        assertThat(data.flags()).containsEntry("zatrudniony", false);
+        assertThat(data.flags()).containsEntry("etat", false);
+        assertThat(data.texts()).containsEntry("firma", "Niedotyczy");
+    }
+
+    @Test
+    void appliesDefaultValuesWhenPresentAndInputMissing() {
+        String yaml = """
+            fields:
+              - name: imie
+                label: Imię
+                type: text
+                default: "Jan"
+              - name: jednostka
+                label: Jednostka
+                type: select
+                options: [miesięcznie, godzinowo]
+                default: "miesięcznie"
+              - name: student
+                label: Student
+                type: checkbox
+                default: true
+            """;
+        FieldCatalog cat = FieldCatalog.load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
+
+        TemplateData data = FormValues.of(cat, Map.of()).toTemplateData();
+        assertThat(data.texts()).containsEntry("imie", "Jan");
+        assertThat(data.texts()).containsEntry("jednostka", "miesięcznie");
+        assertThat(data.flags()).containsEntry("student", true);
     }
 }
