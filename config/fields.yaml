@@ -127,3 +127,68 @@ fields:
     type: checkbox
     enabled_if: "dzialalnosc_checkbox"
     disabled_value: false
+  - name: nowy_przedsiebiorca_checkbox
+    label: Opłaca składki na zasadach preferencyjnych jako Nowy Przedsiębiorca
+    type: checkbox
+    default: false
+  - name: przedmiot_umowy_checkbox
+    label: Przedmiot umowy wchodzi w zakres prowadzonej działalności gospodarczej
+    type: checkbox
+    default: false
+  - name: ubezpieczenie_spoleczne_checkbox
+    label: Ubezpieczenie społeczne
+    type: checkbox
+    default: false
+  - name: urlop_checkbox
+    label: Urlop ...
+    type: checkbox
+    default: false
+  - name: urlop_macierzynski_checkbox
+    label: ... macierzyński
+    type: checkbox
+    default: false
+    enabled_if: "urlop_checkbox"
+    disabled_value: false
+  - name: urlop_wychowawczy_checkbox
+    label: ... wychowawczy
+    type: checkbox
+    default: false
+    enabled_if: "urlop_checkbox"
+    disabled_value: false
+  - name: urlop_bezplatny_checkbox
+    label: ... bezpłatny
+    type: checkbox
+    default: false
+    enabled_if: "urlop_checkbox"
+    disabled_value: false
+  - name: emeryt_checkbox
+    label: Emeryt ...
+    type: checkbox
+    default: false
+  - name: legitymacja_emerycka
+    label: ... numer legitymacji ...
+    type: text
+    enabled_if: "emeryt_checkbox"
+    disabled_value: ""
+  - name: legitymacja_emerycka_z_dnia
+    label: ... z dnia
+    type: date
+    enabled_if: "emeryt_checkbox"
+  - name: rencista_checkbox
+    label: Rencista ...
+    type: checkbox
+    default: false
+  - name: renta_rodzinna_checkbox
+    label: ... i otrzymuje rentę rodzinną ...
+    type: checkbox
+    default: false
+    enabled_if: "rencista_checkbox"
+  - name: legitymacja_rencisty
+    label: ... numer legitymacji
+    type: text
+    enabled_if: "rencista_checkbox"
+    disabled_value: ""
+  - name: legitymacja_rencisty_z_dnia
+    label: ... z dnia
+    type: date
+    enabled_if: "rencista_checkbox"
