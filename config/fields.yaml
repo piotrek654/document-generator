@@ -37,7 +37,7 @@ fields:
   - name: jednostka
     label: Jednostka
     type: select
-    options: [pełen miesięczny zakres, godzinę]
+    options: [ pełen miesięczny zakres, godzinę ]
     default: "pełen miesięczny zakres"
   - name: kwota_slownie
     label: Kwota słownie
@@ -214,3 +214,15 @@ fields:
     default: false
     enabled_if: "niepelnosprawnosc_checkbox"
     disabled_value: false
+  - name: limit_kosztow_autorskich_checkbox
+    label: Limit kosztów autorskich przekracza ograniczenia roczne
+    type: checkbox
+    default: false
+  - name: zastosowano_koszty_autorskie_kwota
+    label: Dotychczas zastosowano koszty autorskie o wartości (zł)
+    type: amount
+    default: 0
+  - name: obowiazek_podatkowy_checkbox
+    label: Podlega nieograniczonemu obowiązkowi podatkowemu w Polsce
+    type: checkbox
+    default: true
