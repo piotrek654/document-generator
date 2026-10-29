@@ -192,3 +192,25 @@ fields:
     label: ... z dnia
     type: date
     enabled_if: "rencista_checkbox"
+  - name: niepelnosprawnosc_checkbox
+    label: Niepełnosprawność ...
+    type: checkbox
+    default: false
+  - name: niepelnosprawnosc_lekka_checkbox
+    label: ... lekka
+    type: checkbox
+    default: false
+    enabled_if: "niepelnosprawnosc_checkbox"
+    disabled_value: false
+  - name: niepelnosprawnosc_umiarkowana_checkbox
+    label: ... umiarkowana
+    type: checkbox
+    default: false
+    enabled_if: "niepelnosprawnosc_checkbox"
+    disabled_value: false
+  - name: niepelnosprawnosc_znaczna_checkbox
+    label: ... znaczna
+    type: checkbox
+    default: false
+    enabled_if: "niepelnosprawnosc_checkbox"
+    disabled_value: false
