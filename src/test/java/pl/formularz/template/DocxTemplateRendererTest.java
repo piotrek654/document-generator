@@ -186,7 +186,7 @@ class DocxTemplateRendererTest {
 
     @Test
     void rendersActualOswiadczenieTemplateWithCorrectStrikes() throws IOException {
-        java.nio.file.Path oswiadczeniePath = java.nio.file.Path.of("data/WZÓR oświadczenie do umów zlecenia 2026 wersja zaktualizowana.docx");
+        java.nio.file.Path oswiadczeniePath = java.nio.file.Path.of("src/test/resources/templates/oswiadczenie.docx");
         if (!java.nio.file.Files.exists(oswiadczeniePath)) {
             return;
         }

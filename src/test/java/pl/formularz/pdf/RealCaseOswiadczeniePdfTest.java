@@ -71,7 +71,7 @@ class RealCaseOswiadczeniePdfTest {
     void testOswiadczeniePdfWhenCheckboxesAreFalse() throws Exception {
         if (!LibreOfficePdfConverter.isAvailable()) return;
 
-        Path docxPath = Path.of("data/WZÓR oświadczenie do umów zlecenia 2026 wersja zaktualizowana.docx");
+        Path docxPath = Path.of("src/test/resources/templates/oswiadczenie.docx");
         TemplateData data = new TemplateData(
             SAMPLE_VALUES,
             ALL_FLAGS.stream().collect(Collectors.toMap(f -> f, f -> false))
@@ -111,7 +111,7 @@ class RealCaseOswiadczeniePdfTest {
     void testOswiadczeniePdfWhenCheckboxesAreTrue() throws Exception {
         if (!LibreOfficePdfConverter.isAvailable()) return;
 
-        Path docxPath = Path.of("data/WZÓR oświadczenie do umów zlecenia 2026 wersja zaktualizowana.docx");
+        Path docxPath = Path.of("src/test/resources/templates/oswiadczenie.docx");
         TemplateData data = new TemplateData(
             SAMPLE_VALUES,
             ALL_FLAGS.stream().collect(Collectors.toMap(f -> f, f -> true))
