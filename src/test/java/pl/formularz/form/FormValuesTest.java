@@ -213,6 +213,24 @@ class FormValuesTest {
     }
 
     @Test
+    void preservesCustomEndDateAndRokWhenExplicitlyProvided() {
+        TemplateData data = FormValues.of(catalog, Map.of(
+            "imie", "Jan",
+            "data_zawarcia", "01-01-2026",
+            "data_rozpoczecia_umowy", "01-03-2026",
+            "data_zakonczenia_umowy", "30-06-2026",
+            "rok", "2026",
+            "jednostka", "dziennie",
+            "kwota", "100",
+            "zgoda", true)).toTemplateData();
+
+        assertThat(data.texts())
+            .containsEntry("data_rozpoczecia_umowy", "01-03-2026")
+            .containsEntry("data_zakonczenia_umowy", "30-06-2026")
+            .containsEntry("rok", "2026");
+    }
+
+    @Test
     void computesDataZakonczeniaUmowyAndRokForLeapYear() {
         TemplateData data = FormValues.of(catalog, Map.of(
             "imie", "Jan",

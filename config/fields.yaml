@@ -7,8 +7,15 @@ fields:
   - name: data_zawarcia_umowy
     label: Data zawarcia umowy
     type: date
+  - name: rok
+    label: Rok
+    type: select
+    options: [ "2026", "2027", "2028", "2029", "2030", "2031", "2032", "2033", "2034", "2035" ]
   - name: data_rozpoczecia_umowy
     label: Data rozpoczęcia umowy
+    type: date
+  - name: data_zakonczenia_umowy
+    label: Data zakończenia umowy
     type: date
   - name: imie
     label: Imię
@@ -226,3 +233,7 @@ fields:
     label: Podlega nieograniczonemu obowiązkowi podatkowemu w Polsce
     type: checkbox
     default: true
+  - name: standard_g_checkbox
+    label: Z trawą (standard G)
+    type: checkbox
+    default: false

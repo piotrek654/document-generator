@@ -62,6 +62,7 @@ public class FormApp extends Application {
     private final Map<String, Node> fieldControls = new LinkedHashMap<>();
     private final Map<String, Label> fieldLabels = new LinkedHashMap<>();
     private final Map<String, CheckBox> checkBoxes = new LinkedHashMap<>();
+    private boolean updatingContractDates = false;
     private FieldCatalog catalog;
     private LibreOfficePdfConverter converter;
 
@@ -93,6 +94,7 @@ public class FormApp extends Application {
         }
 
         setupDependencies();
+        setupContractDates();
 
         ScrollPane scroll = new ScrollPane(grid);
         scroll.setFitToWidth(true);
@@ -237,7 +239,15 @@ public class FormApp extends Application {
                 ComboBox<String> input = new ComboBox<>();
                 input.getItems().setAll(select.options());
                 input.setMaxWidth(Double.MAX_VALUE);
-                field.defaultValue().ifPresent(def -> input.setValue(def.toString()));
+                String defVal = field.defaultValue().map(Object::toString).orElseGet(() -> {
+                    if ("rok".equals(select.name())) {
+                        return defaultYear(LocalDate.now());
+                    }
+                    return null;
+                });
+                if (defVal != null) {
+                    input.setValue(defVal);
+                }
                 input.valueProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
                 readers.put(select.name(), input::getValue);
                 yield input;
@@ -292,6 +302,9 @@ public class FormApp extends Application {
         });
         input.setPromptText("DD-MM-YYYY");
         input.setMaxWidth(Double.MAX_VALUE);
+        if (initialDate != null) {
+            input.getEditor().setText(formatter.format(initialDate));
+        }
         input.valueProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
         input.getEditor().textProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
         readers.put(name, () -> {
@@ -396,5 +409,126 @@ public class FormApp extends Application {
         alert.setContentText(content);
         alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         alert.showAndWait();
+    }
+
+    public static String defaultYear(LocalDate date) {
+        int year = date.getYear();
+        if (date.getMonthValue() >= 10) {
+            year++;
+        }
+        return String.valueOf(year);
+    }
+
+    private void setupContractDates() {
+        ComboBox<?> rokComboRaw = (ComboBox<?>) fieldControls.get("rok");
+        DatePicker zawarciaPicker = (DatePicker) fieldControls.get("data_zawarcia_umowy");
+        DatePicker rozpoczeciaPicker = (DatePicker) fieldControls.get("data_rozpoczecia_umowy");
+        DatePicker zakonczeniaPicker = (DatePicker) fieldControls.get("data_zakonczenia_umowy");
+
+        if (rokComboRaw != null && rozpoczeciaPicker != null && zakonczeniaPicker != null) {
+            @SuppressWarnings("unchecked")
+            ComboBox<String> rokCombo = (ComboBox<String>) rokComboRaw;
+
+            rokCombo.valueProperty().addListener((obs, oldV, newV) -> updateDatesFromYear());
+
+            if (zawarciaPicker != null) {
+                zawarciaPicker.valueProperty().addListener((obs, oldV, newV) -> updateStartDateFromZawarcia());
+                zawarciaPicker.getEditor().textProperty().addListener((obs, oldV, newV) -> updateStartDateFromZawarcia());
+            }
+
+            updateDatesFromYear();
+        }
+    }
+
+    private void updateDatesFromYear() {
+        if (updatingContractDates) {
+            return;
+        }
+        updatingContractDates = true;
+        try {
+            ComboBox<?> rokComboRaw = (ComboBox<?>) fieldControls.get("rok");
+            DatePicker zawarciaPicker = (DatePicker) fieldControls.get("data_zawarcia_umowy");
+            DatePicker rozpoczeciaPicker = (DatePicker) fieldControls.get("data_rozpoczecia_umowy");
+            DatePicker zakonczeniaPicker = (DatePicker) fieldControls.get("data_zakonczenia_umowy");
+
+            if (rokComboRaw == null || rozpoczeciaPicker == null || zakonczeniaPicker == null) {
+                return;
+            }
+            @SuppressWarnings("unchecked")
+            ComboBox<String> rokCombo = (ComboBox<String>) rokComboRaw;
+
+            String selectedYear = rokCombo.getValue();
+            if (selectedYear == null || !selectedYear.trim().matches("\\d{4}")) {
+                return;
+            }
+
+            int year = Integer.parseInt(selectedYear.trim());
+            LocalDate baseStart = LocalDate.of(year, 1, 1);
+            LocalDate baseEnd = LocalDate.of(year, 12, 31);
+
+            LocalDate zawarcia = parsePickerDate(zawarciaPicker);
+            LocalDate actualStart = baseStart;
+            if (zawarcia != null && actualStart.isBefore(zawarcia)) {
+                actualStart = zawarcia;
+            }
+
+            setPickerDate(rozpoczeciaPicker, actualStart);
+            setPickerDate(zakonczeniaPicker, baseEnd);
+        } finally {
+            updatingContractDates = false;
+        }
+    }
+
+    private void updateStartDateFromZawarcia() {
+        if (updatingContractDates) {
+            return;
+        }
+        updatingContractDates = true;
+        try {
+            DatePicker zawarciaPicker = (DatePicker) fieldControls.get("data_zawarcia_umowy");
+            DatePicker rozpoczeciaPicker = (DatePicker) fieldControls.get("data_rozpoczecia_umowy");
+
+            if (zawarciaPicker == null || rozpoczeciaPicker == null) {
+                return;
+            }
+
+            LocalDate zawarcia = parsePickerDate(zawarciaPicker);
+            LocalDate rozpoczecia = parsePickerDate(rozpoczeciaPicker);
+
+            if (zawarcia != null && rozpoczecia != null && rozpoczecia.isBefore(zawarcia)) {
+                setPickerDate(rozpoczeciaPicker, zawarcia);
+            }
+        } finally {
+            updatingContractDates = false;
+        }
+    }
+
+    private static LocalDate parsePickerDate(DatePicker picker) {
+        if (picker == null) {
+            return null;
+        }
+        String text = picker.getEditor().getText();
+        if (text != null && !text.isBlank()) {
+            try {
+                LocalDate parsed = picker.getConverter().fromString(text.trim());
+                if (parsed != null) {
+                    return parsed;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return picker.getValue();
+    }
+
+    private static void setPickerDate(DatePicker picker, LocalDate date) {
+        if (picker == null) {
+            return;
+        }
+        picker.setValue(date);
+        if (date != null && picker.getConverter() != null) {
+            picker.getEditor().setText(picker.getConverter().toString(date));
+        } else {
+            picker.getEditor().setText("");
+        }
     }
 }

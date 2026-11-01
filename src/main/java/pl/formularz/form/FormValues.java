@@ -148,12 +148,51 @@ public final class FormValues {
             }
         }
 
+        if (!texts.containsKey("data_zakonczenia_umowy") && input.containsKey("data_zakonczenia_umowy") && input.get("data_zakonczenia_umowy") != null && !input.get("data_zakonczenia_umowy").toString().isBlank()) {
+            Object raw = input.get("data_zakonczenia_umowy");
+            if (raw instanceof LocalDate ld) {
+                texts.put("data_zakonczenia_umowy", ld.format(DATE_FORMATTER));
+            } else {
+                try {
+                    texts.put("data_zakonczenia_umowy", parseDate(raw.toString()).format(DATE_FORMATTER));
+                } catch (Exception e) {
+                    texts.put("data_zakonczenia_umowy", raw.toString());
+                }
+            }
+        }
+        if (!texts.containsKey("rok") && input.containsKey("rok") && input.get("rok") != null && !input.get("rok").toString().isBlank()) {
+            texts.put("rok", input.get("rok").toString());
+        }
+
         if (texts.containsKey("data_rozpoczecia_umowy") && !texts.get("data_rozpoczecia_umowy").isBlank()) {
             try {
                 LocalDate startDate = parseDate(texts.get("data_rozpoczecia_umowy"));
-                LocalDate endDate = LocalDate.of(startDate.getYear(), 12, 31);
-                texts.put("data_zakonczenia_umowy", endDate.format(DATE_FORMATTER));
-                texts.put("rok", String.valueOf(startDate.getYear()));
+                if (!texts.containsKey("data_zakonczenia_umowy") || texts.get("data_zakonczenia_umowy").isBlank()) {
+                    LocalDate endDate = LocalDate.of(startDate.getYear(), 12, 31);
+                    texts.put("data_zakonczenia_umowy", endDate.format(DATE_FORMATTER));
+                }
+                if (!texts.containsKey("rok") || texts.get("rok").isBlank()) {
+                    texts.put("rok", String.valueOf(startDate.getYear()));
+                }
+            } catch (Exception ignored) {
+            }
+        } else if (texts.containsKey("rok") && !texts.get("rok").isBlank()) {
+            try {
+                int year = Integer.parseInt(texts.get("rok").trim());
+                if (!texts.containsKey("data_rozpoczecia_umowy") || texts.get("data_rozpoczecia_umowy").isBlank()) {
+                    LocalDate startDate = LocalDate.of(year, 1, 1);
+                    if (texts.containsKey("data_zawarcia_umowy") && !texts.get("data_zawarcia_umowy").isBlank()) {
+                        LocalDate zawarcia = parseDate(texts.get("data_zawarcia_umowy"));
+                        if (startDate.isBefore(zawarcia)) {
+                            startDate = zawarcia;
+                        }
+                    }
+                    texts.put("data_rozpoczecia_umowy", startDate.format(DATE_FORMATTER));
+                }
+                if (!texts.containsKey("data_zakonczenia_umowy") || texts.get("data_zakonczenia_umowy").isBlank()) {
+                    LocalDate endDate = LocalDate.of(year, 12, 31);
+                    texts.put("data_zakonczenia_umowy", endDate.format(DATE_FORMATTER));
+                }
             } catch (Exception ignored) {
             }
         }
