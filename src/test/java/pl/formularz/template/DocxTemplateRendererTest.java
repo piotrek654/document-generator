@@ -15,6 +15,9 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.junit.jupiter.api.Test;
 
+import pl.formularz.form.FieldCatalog;
+import pl.formularz.form.FormValues;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -26,6 +29,21 @@ class DocxTemplateRendererTest {
         "Ten dodatkowy akapit będzie skreślony przy zaznaczonym.";
 
     private final TemplateRenderer renderer = new DocxTemplateRenderer();
+
+    @Test
+    void rendersFormattedNrbFromFormValues() throws IOException {
+        String yaml = """
+            fields:
+              - name: konto
+                label: Numer konta
+                type: nrb
+            """;
+        FieldCatalog catalog = FieldCatalog.load(new ByteArrayInputStream(yaml.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        TemplateData data = FormValues.of(catalog, Map.of("konto", "61109010140000071219812874")).toTemplateData();
+        try (XWPFDocument result = render(templateWithText("Konto: {konto}"), data)) {
+            assertThat(allText(result)).isEqualTo("Konto: 61 1090 1014 0000 0712 1981 2874");
+        }
+    }
 
     @Test
     void fillsAllPlaceholdersOfSampleTemplate() throws IOException {

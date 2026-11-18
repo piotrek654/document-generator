@@ -71,6 +71,12 @@ public final class FormValues {
                     } else {
                         texts.put(dateField.name(), "");
                     }
+                } else if (field instanceof FieldDefinition.Nrb nrb && disabledVal != null) {
+                    try {
+                        texts.put(nrb.name(), Nrb.format(disabledVal.toString()));
+                    } catch (IllegalArgumentException e) {
+                        texts.put(nrb.name(), disabledVal.toString());
+                    }
                 } else if (field instanceof FieldDefinition.AmountInWords) {
                     // computed below
                 } else {
@@ -82,6 +88,15 @@ public final class FormValues {
             switch (field) {
                 case FieldDefinition.Text text ->
                     required(text, problems, problemFields).ifPresent(v -> texts.put(text.name(), v));
+                case FieldDefinition.Nrb nrb ->
+                    required(nrb, problems, problemFields).ifPresent(value -> {
+                        try {
+                            texts.put(nrb.name(), Nrb.format(value));
+                        } catch (IllegalArgumentException e) {
+                            problems.add("Pole „" + nrb.label() + "”: niepoprawny numer NRB (wymagane 26 cyfr i prawidłowa suma kontrolna).");
+                            problemFields.add(nrb.name());
+                        }
+                    });
                 case FieldDefinition.Date dateField ->
                     required(dateField, problems, problemFields).ifPresent(value -> {
                         Object raw = input.get(dateField.name());

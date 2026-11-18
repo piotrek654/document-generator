@@ -23,6 +23,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -39,6 +40,7 @@ import pl.formularz.form.FieldCatalog;
 import pl.formularz.form.FieldDefinition;
 import pl.formularz.form.FormException;
 import pl.formularz.form.FormValues;
+import pl.formularz.form.Nrb;
 import pl.formularz.pdf.LibreOfficePdfConverter;
 import pl.formularz.pdf.PdfBoxPdfMerger;
 import pl.formularz.template.DocxTemplateRenderer;
@@ -225,6 +227,13 @@ public class FormApp extends Application {
                 field.defaultValue().ifPresent(def -> input.setText(def.toString()));
                 yield input;
             }
+            case FieldDefinition.Nrb nrb -> {
+                TextField input = textInput(nrb.name());
+                input.setPromptText("26 cyfr numeru rachunku");
+                input.setTextFormatter(new TextFormatter<String>(FormApp::formatNrbChange));
+                field.defaultValue().ifPresent(def -> input.setText(def.toString()));
+                yield input;
+            }
             case FieldDefinition.Date date -> {
                 DatePicker input = dateInput(date.name(), field.defaultValue().orElse(null));
                 yield input;
@@ -333,6 +342,39 @@ public class FormApp extends Application {
         input.textProperty().addListener((obs, oldV, newV) -> input.setStyle(""));
         readers.put(name, input::getText);
         return input;
+    }
+
+    static TextFormatter.Change formatNrbChange(TextFormatter.Change change) {
+        if (!change.isContentChange()) {
+            return change;
+        }
+        String oldText = change.getControlText();
+        int start = change.getRangeStart();
+        int end = change.getRangeEnd();
+        if (change.getText().isEmpty() && end == start + 1 && oldText.charAt(start) == ' '
+            && change.getControlAnchor() == change.getControlCaretPosition()) {
+            if (change.getControlCaretPosition() == end && start > 0) {
+                change.setRange(start - 1, end);
+                change.selectRange(start - 1, start - 1);
+            } else if (change.getControlCaretPosition() == start && end < oldText.length()) {
+                change.setRange(start, end + 1);
+                change.selectRange(start, start);
+            }
+        }
+        String newText = change.getControlNewText();
+        if (!newText.matches("[0-9 ]*")) {
+            return change;
+        }
+        int anchorDigits = newText.substring(0, change.getAnchor()).replace(" ", "").length();
+        int caretDigits = newText.substring(0, change.getCaretPosition()).replace(" ", "").length();
+        String digits = newText.replace(" ", "");
+        String formatted = Nrb.formatDigits(digits);
+        int anchor = Nrb.formatDigits(digits.substring(0, anchorDigits)).length();
+        int caret = Nrb.formatDigits(digits.substring(0, caretDigits)).length();
+        change.setRange(0, oldText.length());
+        change.setText(formatted);
+        change.selectRange(anchor, caret);
+        return change;
     }
 
     /** Read-only preview refreshed while the source amount is typed; the value itself is computed by FormValues. */

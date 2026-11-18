@@ -37,6 +37,19 @@ public sealed interface FieldDefinition {
         }
     }
 
+    record Nrb(
+        String name,
+        String label,
+        Optional<String> enabledIf,
+        Optional<Object> disabledValue,
+        Optional<Object> defaultValue
+    ) implements FieldDefinition {
+
+        public Nrb(String name, String label) {
+            this(name, label, Optional.empty(), Optional.empty(), Optional.empty());
+        }
+    }
+
     record Date(
         String name,
         String label,

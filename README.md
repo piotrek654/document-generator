@@ -105,7 +105,7 @@ document-generator/
 
 ## 5. Struktura katalogów projektu
 
-- `config/fields.yaml` — definicje pól formularza (tekst, data, kwota, listy wyboru, checkboxy, kwota słownie).
+- `config/fields.yaml` — definicje pól formularza (tekst, data, kwota, NRB, listy wyboru, checkboxy, kwota słownie). Pole `nrb` wymaga 26 cyfr polskiego numeru rachunku z poprawną sumą kontrolną; numer jest wyświetlany i wstawiany do dokumentów w grupach, np. `61 1090 1014 0000 0712 1981 2874`.
 - `data/` — szablony dokumentów w formacie `.docx`, `.xlsx` oraz `.xls` z placeholderami `{nazwa_pola}` oraz blokami `{#skresl:checkbox}...{/skresl}`.
 - `output/` — domyślny katalog zapisu wygenerowanego scalonego pliku PDF (`dokumenty.pdf`).
 - `scripts/build-dist.sh` — skrypt budujący kompletne paczki dystrybucyjne z wbudowanym JRE.

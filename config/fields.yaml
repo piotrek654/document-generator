@@ -53,6 +53,12 @@ fields:
   - name: urzad_skarbowy
     label: Urząd skarbowy
     type: text
+  - name: bank
+    label: Nazwa banku
+    type: text
+  - name: numer_rachunku_bankowego
+    label: Numer rachunku bankowego
+    type: nrb
   - name: bezrobotny_checkbox
     label: Bezrobotny ...
     type: checkbox
