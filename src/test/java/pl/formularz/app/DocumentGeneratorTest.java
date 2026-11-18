@@ -89,6 +89,47 @@ class DocumentGeneratorTest {
     }
 
     @Test
+    void includesSicknessApplicationWhenRequested() throws IOException {
+        Path templates = templatesDir("01_wniosek.docx", "Wniosek {imie}",
+            "02_WNIOSEK_CHOROBOWE.DOCX", "Wniosek chorobowe {imie}");
+
+        Path pdf = generator.generate(templates, data(), workDir.resolve("z-chorobowym.pdf"), true);
+
+        assertThat(pagesOf(pdf)).containsExactly("Wniosek Jan", "Wniosek chorobowe Jan");
+    }
+
+    @Test
+    void skipsSicknessApplicationWhenNotRequested() throws IOException {
+        Path templates = templatesDir("01_wniosek.docx", "Wniosek {imie}",
+            "02_WNIOSEK_CHOROBOWE.docx", "Wniosek {nieznane}",
+            "03_umowa.docx", "Umowa {imie}");
+
+        Path pdf = generator.generate(templates, data(), workDir.resolve("bez-chorobowego.pdf"), false);
+
+        assertThat(pagesOf(pdf)).containsExactly("Wniosek Jan", "Umowa Jan");
+    }
+
+    @Test
+    void legacyGenerateContinuesToIncludeSicknessApplication() throws IOException {
+        Path templates = templatesDir("01_wniosek.docx", "Wniosek {imie}",
+            "02_wniosek_chorobowe.docx", "Wniosek chorobowe {imie}");
+
+        Path pdf = generator.generate(templates, data(), workDir.resolve("domyslnie.pdf"));
+
+        assertThat(pagesOf(pdf)).containsExactly("Wniosek Jan", "Wniosek chorobowe Jan");
+    }
+
+    @Test
+    void reportsWhenOnlySicknessApplicationWouldRemain() throws IOException {
+        Path templates = templatesDir("wniosek_chorobowe.docx", "Wniosek chorobowe {imie}");
+
+        assertThatThrownBy(() -> generator.generate(templates, data(), workDir.resolve("pusty.pdf"), false))
+            .isInstanceOf(TemplateException.class)
+            .hasMessageContaining("Brak szablonów")
+            .hasMessageContaining(templates.toString());
+    }
+
+    @Test
     void removesIntermediateFilesAfterMerging() throws IOException {
         Path templates = templatesDir("a.docx", "A {imie}", "b.docx", "B {imie}");
 

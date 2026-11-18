@@ -47,9 +47,18 @@ public class DocumentGenerator {
     }
 
     public Path generate(Path templatesDir, TemplateData data, Path pdf) {
+        return generate(templatesDir, data, pdf, true);
+    }
+
+    public Path generate(Path templatesDir, TemplateData data, Path pdf, boolean includeSicknessApplication) {
         List<Path> templates = templatesIn(templatesDir);
+        if (!includeSicknessApplication) {
+            templates = templates.stream()
+                .filter(template -> !template.getFileName().toString().toLowerCase(Locale.ROOT).contains("chorobowe"))
+                .toList();
+        }
         if (templates.isEmpty()) {
-            throw new TemplateException("Brak szablonów (.docx, .xlsx, .xls) w katalogu " + templatesDir);
+            throw new TemplateException("Brak szablonów (.docx, .xlsx, .xls) do wygenerowania w katalogu " + templatesDir);
         }
         Path workDir = createTempDirectory();
         try {

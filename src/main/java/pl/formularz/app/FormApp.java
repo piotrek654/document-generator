@@ -64,6 +64,7 @@ public class FormApp extends Application {
     private final Map<String, Node> fieldControls = new LinkedHashMap<>();
     private final Map<String, Label> fieldLabels = new LinkedHashMap<>();
     private final Map<String, CheckBox> checkBoxes = new LinkedHashMap<>();
+    private CheckBox sicknessApplicationCheckBox;
     private boolean updatingContractDates = false;
     private FieldCatalog catalog;
     private LibreOfficePdfConverter converter;
@@ -94,6 +95,7 @@ public class FormApp extends Application {
             fieldLabels.put(field.name(), label);
             grid.addRow(row++, label, inputFor(field));
         }
+        addSicknessApplicationCheckbox(grid, row);
 
         setupDependencies();
         setupContractDates();
@@ -203,6 +205,15 @@ public class FormApp extends Application {
         bar.setAlignment(Pos.CENTER_RIGHT);
         bar.setPadding(new Insets(PADDING));
         return bar;
+    }
+
+    void addSicknessApplicationCheckbox(GridPane grid, int row) {
+        Label label = new Label("Dołącz wniosek o dobrowolne chorobowe");
+        label.setWrapText(true);
+        label.setMaxWidth(Double.MAX_VALUE);
+        sicknessApplicationCheckBox = new CheckBox();
+        label.setLabelFor(sicknessApplicationCheckBox);
+        grid.addRow(row, label, sicknessApplicationCheckBox);
     }
 
     private static void fitToScreen(Stage stage) {
@@ -421,6 +432,7 @@ public class FormApp extends Application {
             show(Alert.AlertType.ERROR, "Nieoczekiwany błąd", t.getMessage() != null ? t.getMessage() : t.toString());
             return;
         }
+        boolean includeSicknessApplication = sicknessApplicationCheckBox.isSelected();
         button.setDisable(true);
         Task<Path> task = new Task<>() {
             @Override
@@ -429,7 +441,7 @@ public class FormApp extends Application {
                     converter = LibreOfficePdfConverter.start();
                 }
                 return new DocumentGenerator(converter, new PdfBoxPdfMerger())
-                    .generate(TEMPLATES_DIR, data, OUTPUT_PDF);
+                    .generate(TEMPLATES_DIR, data, OUTPUT_PDF, includeSicknessApplication);
             }
         };
         task.setOnSucceeded(event -> {

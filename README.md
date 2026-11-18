@@ -47,6 +47,7 @@ W katalogu `target/` powstaną:
 ```bash
 mvn javafx:run
 ```
+Na końcu formularza znajduje się checkbox `Dołącz wniosek o dobrowolne chorobowe`. Gdy jest zaznaczony, do PDF dołączany jest szablon, którego nazwa zawiera `chorobowe` (bez względu na wielkość liter); po odznaczeniu taki szablon jest pomijany. Tryb CLI zachowuje dotychczasowe zachowanie i uwzględnia wszystkie szablony.
 
 #### Tryb wiersza poleceń (CLI)
 ```bash
