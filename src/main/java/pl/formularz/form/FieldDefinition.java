@@ -37,6 +37,19 @@ public sealed interface FieldDefinition {
         }
     }
 
+    record Pesel(
+        String name,
+        String label,
+        Optional<String> enabledIf,
+        Optional<Object> disabledValue,
+        Optional<Object> defaultValue
+    ) implements FieldDefinition {
+
+        public Pesel(String name, String label) {
+            this(name, label, Optional.empty(), Optional.empty(), Optional.empty());
+        }
+    }
+
     record Nrb(
         String name,
         String label,

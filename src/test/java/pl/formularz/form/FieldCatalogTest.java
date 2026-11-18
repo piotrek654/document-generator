@@ -57,6 +57,12 @@ class FieldCatalogTest {
     void loadsMainConfigWithDependenciesAndDefaults() {
         FieldCatalog catalog = FieldCatalog.load(MAIN_CONFIG_PATH);
 
+        FieldDefinition pesel = catalog.fields().stream()
+            .filter(f -> f.name().equals("pesel"))
+            .findFirst()
+            .orElseThrow();
+        assertThat(pesel).isInstanceOf(FieldDefinition.Pesel.class);
+
         FieldDefinition legitymacja = catalog.fields().stream()
             .filter(f -> f.name().equals("legitymacja_studencka_checkbox"))
             .findFirst()

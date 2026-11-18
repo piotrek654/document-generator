@@ -88,6 +88,15 @@ public final class FormValues {
             switch (field) {
                 case FieldDefinition.Text text ->
                     required(text, problems, problemFields).ifPresent(v -> texts.put(text.name(), v));
+                case FieldDefinition.Pesel pesel ->
+                    required(pesel, problems, problemFields).ifPresent(value -> {
+                        if (Pesel.isValid(value)) {
+                            texts.put(pesel.name(), value);
+                        } else {
+                            problems.add("Pole „" + pesel.label() + "”: niepoprawny numer PESEL (wymagane 11 cyfr, prawidłowa data urodzenia i suma kontrolna).");
+                            problemFields.add(pesel.name());
+                        }
+                    });
                 case FieldDefinition.Nrb nrb ->
                     required(nrb, problems, problemFields).ifPresent(value -> {
                         try {

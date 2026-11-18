@@ -85,6 +85,7 @@ public record FieldCatalog(List<FieldDefinition> fields) {
 
             return switch (type) {
                 case "text" -> new FieldDefinition.Text(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt);
+                case "pesel" -> new FieldDefinition.Pesel(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt);
                 case "nrb" -> new FieldDefinition.Nrb(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt);
                 case "date" -> new FieldDefinition.Date(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt);
                 case "select" -> new FieldDefinition.Select(name, label, options != null ? options : List.of(), enabledIfOpt, disabledValueOpt, defaultValueOpt);

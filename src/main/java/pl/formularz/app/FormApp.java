@@ -238,6 +238,12 @@ public class FormApp extends Application {
                 field.defaultValue().ifPresent(def -> input.setText(def.toString()));
                 yield input;
             }
+            case FieldDefinition.Pesel pesel -> {
+                TextField input = textInput(pesel.name());
+                input.setPromptText("11 cyfr");
+                field.defaultValue().ifPresent(def -> input.setText(def.toString()));
+                yield input;
+            }
             case FieldDefinition.Nrb nrb -> {
                 TextField input = textInput(nrb.name());
                 input.setPromptText("26 cyfr numeru rachunku");
