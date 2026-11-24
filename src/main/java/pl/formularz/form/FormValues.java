@@ -97,15 +97,23 @@ public final class FormValues {
                             problemFields.add(pesel.name());
                         }
                     });
-                case FieldDefinition.Nrb nrb ->
-                    required(nrb, problems, problemFields).ifPresent(value -> {
+                case FieldDefinition.Nrb nrb -> {
+                    Object raw = input.get(nrb.name());
+                    if (raw == null && nrb.defaultValue().isPresent()) {
+                        raw = nrb.defaultValue().get();
+                    }
+                    if (raw == null || raw.toString().isBlank()) {
+                        texts.put(nrb.name(), "");
+                    } else {
+                        String value = raw.toString();
                         try {
                             texts.put(nrb.name(), Nrb.format(value));
                         } catch (IllegalArgumentException e) {
                             problems.add("Pole „" + nrb.label() + "”: niepoprawny numer NRB (wymagane 26 cyfr i prawidłowa suma kontrolna).");
                             problemFields.add(nrb.name());
                         }
-                    });
+                    }
+                }
                 case FieldDefinition.Date dateField ->
                     required(dateField, problems, problemFields).ifPresent(value -> {
                         Object raw = input.get(dateField.name());

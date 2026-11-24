@@ -2,6 +2,7 @@ package pl.formularz.form;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -34,17 +35,25 @@ class NrbFormValuesTest {
     }
 
     @Test
-    void rejectsMissingMalformedAndInvalidChecksum() {
-        for (String value : new String[] {"", "6110901014000007121981287", "61109010140000071219812875",
+    void acceptsMissingNullAndBlankNumbersAsEmpty() {
+        Map<String, Object> nullValue = new HashMap<>();
+        nullValue.put("konto", null);
+
+        assertEmptyNumber(Map.of());
+        assertEmptyNumber(nullValue);
+        assertEmptyNumber(Map.of("konto", ""));
+        assertEmptyNumber(Map.of("konto", "  \t"));
+    }
+
+    @Test
+    void rejectsMalformedAndInvalidChecksum() {
+        for (String value : new String[] {"6110901014000007121981287", "61109010140000071219812875",
             "611090101400000712198128740", "61-109010140000071219812874", "PL" + VALID,
             "99000000000000000000000036", "01000000000000000000000054", "00000000000000000000000072"}) {
             assertThatThrownBy(() -> FormValues.of(catalog, Map.of("konto", value)).toTemplateData())
                 .isInstanceOf(FormException.class)
                 .hasMessageContaining("Numer konta");
         }
-        assertThatThrownBy(() -> FormValues.of(catalog, Map.of()).toTemplateData())
-            .isInstanceOf(FormException.class)
-            .hasMessageContaining("Numer konta");
     }
 
     @Test
@@ -72,6 +81,13 @@ class NrbFormValuesTest {
 
         assertThat(FormValues.of(conditional, Map.of("enabled", true)).toTemplateData().texts())
             .containsEntry("konto", FORMATTED);
+        Map<String, Object> nullValue = new HashMap<>();
+        nullValue.put("enabled", true);
+        nullValue.put("konto", null);
+        assertThat(FormValues.of(conditional, nullValue).toTemplateData().texts())
+            .containsEntry("konto", FORMATTED);
+        assertThat(FormValues.of(conditional, Map.of("enabled", true, "konto", ""))
+            .toTemplateData().texts()).containsEntry("konto", "");
         assertThat(FormValues.of(conditional, Map.of("enabled", false, "konto", "niepoprawny"))
             .toTemplateData().texts()).containsEntry("konto", "");
     }
@@ -93,5 +109,10 @@ class NrbFormValuesTest {
             assertThat(FormValues.of(conditional, Map.of("enabled", false)).toTemplateData().texts())
                 .containsEntry("konto", value.equals(VALID) ? FORMATTED : value);
         }
+    }
+
+    private void assertEmptyNumber(Map<String, Object> values) {
+        assertThat(FormValues.of(catalog, values).toTemplateData().texts())
+            .containsEntry("konto", "");
     }
 }
