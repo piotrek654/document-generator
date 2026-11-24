@@ -2,6 +2,7 @@ package pl.formularz.form;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -151,6 +152,65 @@ class FormValuesTest {
     }
 
     @Test
+    void acceptsMissingNullAndBlankOptionalBankName() {
+        Map<String, Object> nullBank = new HashMap<>();
+        nullBank.put("imie", "Jan");
+        nullBank.put("bank", null);
+
+        assertBankName(Map.of("imie", "Jan"), "");
+        assertBankName(nullBank, "");
+        assertBankName(Map.of("imie", "Jan", "bank", ""), "");
+        assertBankName(Map.of("imie", "Jan", "bank", "  \t"), "");
+    }
+
+    @Test
+    void preservesProvidedOptionalBankName() {
+        assertBankName(Map.of("imie", "Jan", "bank", "  Bank XYZ  "), "  Bank XYZ  ");
+    }
+
+    @Test
+    void keepsOtherTextFieldsRequiredWhenBankIsOptional() {
+        assertThatThrownBy(() -> FormValues.of(optionalBankCatalog(), Map.of("bank", "")).toTemplateData())
+            .isInstanceOf(FormException.class)
+            .hasMessageContaining("Imię")
+            .satisfies(error -> assertThat(((FormException) error).fieldNames()).contains("imie").doesNotContain("bank"));
+    }
+
+    @Test
+    void appliesBankDefaultAndDisabledValue() {
+        String defaultYaml = """
+            fields:
+              - name: imie
+                label: Imię
+                type: text
+              - name: bank
+                label: Nazwa banku
+                type: text
+                optional: true
+                default: Bank domyślny
+            """;
+        assertThat(FormValues.of(loadCatalog(defaultYaml), Map.of("imie", "Jan"))
+            .toTemplateData().texts()).containsEntry("bank", "Bank domyślny");
+
+        String disabledYaml = """
+            fields:
+              - name: disabled
+                label: Wyłączone
+                type: checkbox
+                default: false
+              - name: bank
+                label: Nazwa banku
+                type: text
+                optional: true
+                enabled_if: disabled
+                disabled_value: ""
+                default: Bank domyślny
+            """;
+        assertThat(FormValues.of(loadCatalog(disabledYaml), Map.of("disabled", false))
+            .toTemplateData().texts()).containsEntry("bank", "");
+    }
+
+    @Test
     void rejectsEmptyStringForTextField() {
         FormValues values = FormValues.of(catalog, Map.of(
             "imie", "",
@@ -163,6 +223,28 @@ class FormValuesTest {
         assertThatThrownBy(values::toTemplateData)
             .isInstanceOf(FormException.class)
             .hasMessageContaining("Imię");
+    }
+
+    private static void assertBankName(Map<String, Object> input, String expected) {
+        assertThat(FormValues.of(optionalBankCatalog(), input).toTemplateData().texts())
+            .containsEntry("bank", expected);
+    }
+
+    private static FieldCatalog optionalBankCatalog() {
+        return loadCatalog("""
+            fields:
+              - name: imie
+                label: Imię
+                type: text
+              - name: bank
+                label: Nazwa banku
+                type: text
+                optional: true
+            """);
+    }
+
+    private static FieldCatalog loadCatalog(String yaml) {
+        return FieldCatalog.load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
     }
 
     @Test

@@ -29,11 +29,22 @@ public sealed interface FieldDefinition {
         String label,
         Optional<String> enabledIf,
         Optional<Object> disabledValue,
-        Optional<Object> defaultValue
+        Optional<Object> defaultValue,
+        boolean optional
     ) implements FieldDefinition {
 
         public Text(String name, String label) {
-            this(name, label, Optional.empty(), Optional.empty(), Optional.empty());
+            this(name, label, Optional.empty(), Optional.empty(), Optional.empty(), false);
+        }
+
+        public Text(
+            String name,
+            String label,
+            Optional<String> enabledIf,
+            Optional<Object> disabledValue,
+            Optional<Object> defaultValue
+        ) {
+            this(name, label, enabledIf, disabledValue, defaultValue, false);
         }
     }
 

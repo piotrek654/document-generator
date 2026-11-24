@@ -75,7 +75,8 @@ public record FieldCatalog(List<FieldDefinition> fields) {
         String source,
         @JsonProperty("enabled_if") @JsonAlias("enabledIf") String enabledIf,
         @JsonProperty("disabled_value") @JsonAlias("disabledValue") Object disabledValue,
-        @JsonProperty("default") @JsonAlias("defaultValue") Object defaultValue
+        @JsonProperty("default") @JsonAlias("defaultValue") Object defaultValue,
+        Boolean optional
     ) {
 
         FieldDefinition toDefinition() {
@@ -84,7 +85,8 @@ public record FieldCatalog(List<FieldDefinition> fields) {
             Optional<Object> defaultValueOpt = Optional.ofNullable(defaultValue);
 
             return switch (type) {
-                case "text" -> new FieldDefinition.Text(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt);
+                case "text" -> new FieldDefinition.Text(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt,
+                    Boolean.TRUE.equals(optional));
                 case "pesel" -> new FieldDefinition.Pesel(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt);
                 case "nrb" -> new FieldDefinition.Nrb(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt);
                 case "date" -> new FieldDefinition.Date(name, label, enabledIfOpt, disabledValueOpt, defaultValueOpt);

@@ -86,8 +86,18 @@ public final class FormValues {
             }
 
             switch (field) {
-                case FieldDefinition.Text text ->
-                    required(text, problems, problemFields).ifPresent(v -> texts.put(text.name(), v));
+                case FieldDefinition.Text text -> {
+                    if (text.optional()) {
+                        Object raw = input.get(text.name());
+                        if (raw == null && text.defaultValue().isPresent()) {
+                            raw = text.defaultValue().get();
+                        }
+                        String value = raw == null ? "" : raw.toString();
+                        texts.put(text.name(), value.isBlank() ? "" : value);
+                    } else {
+                        required(text, problems, problemFields).ifPresent(value -> texts.put(text.name(), value));
+                    }
+                }
                 case FieldDefinition.Pesel pesel ->
                     required(pesel, problems, problemFields).ifPresent(value -> {
                         if (Pesel.isValid(value)) {

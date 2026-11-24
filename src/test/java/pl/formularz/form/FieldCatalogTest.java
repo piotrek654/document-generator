@@ -63,6 +63,13 @@ class FieldCatalogTest {
             .orElseThrow();
         assertThat(pesel).isInstanceOf(FieldDefinition.Pesel.class);
 
+        FieldDefinition bank = catalog.fields().stream()
+            .filter(f -> f.name().equals("bank"))
+            .findFirst()
+            .orElseThrow();
+        assertThat(bank).isInstanceOf(FieldDefinition.Text.class);
+        assertThat(((FieldDefinition.Text) bank).optional()).isTrue();
+
         FieldDefinition legitymacja = catalog.fields().stream()
             .filter(f -> f.name().equals("legitymacja_studencka_checkbox"))
             .findFirst()
